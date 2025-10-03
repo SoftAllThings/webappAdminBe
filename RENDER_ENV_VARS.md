@@ -1,11 +1,13 @@
 # Environment Variables for Render Deployment
 
 ## Security Note
+
 For production deployment, it's recommended to set these environment variables through Render's dashboard instead of committing them to the repository.
 
 ## Database Environment Variables Required:
 
 ### Core Database Connection
+
 - `DB_HOST`: aws-1-us-west-1.pooler.supabase.com
 - `DB_PORT`: 5432
 - `DB_NAME`: postgres
@@ -14,11 +16,13 @@ For production deployment, it's recommended to set these environment variables t
 - `DB_SSL`: true
 
 ### Database Pool Configuration
+
 - `DB_MAX_CONNECTIONS`: 20
 - `DB_IDLE_TIMEOUT`: 30000
 - `DB_CONNECTION_TIMEOUT`: 2000
 
 ### Application Configuration
+
 - `NODE_ENV`: production
 - `PORT`: 10000 (Render uses port 10000 by default)
 - `FRONTEND_URL`: [Your React app URL once deployed]
