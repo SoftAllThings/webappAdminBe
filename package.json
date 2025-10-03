@@ -10,8 +10,6 @@
     "start:dev": "ts-node src/index.ts",
     "clean": "rm -rf dist",
     "rebuild": "npm run clean && npm run build",
-    "postbuild": "echo 'Build completed successfully'",
-    "render-build": "npm install && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": ["express", "postgresql", "typescript", "api", "backend"],
