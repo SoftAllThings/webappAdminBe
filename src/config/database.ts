@@ -3,6 +3,16 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// Debug environment variables in production
+console.log('🔍 Environment Debug:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('DB_HOST:', process.env.DB_HOST);
+console.log('DB_PORT:', process.env.DB_PORT);
+console.log('DB_NAME:', process.env.DB_NAME);
+console.log('DB_USER:', process.env.DB_USER ? 'SET' : 'NOT SET');
+console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? 'SET' : 'NOT SET');
+console.log('DB_SSL:', process.env.DB_SSL);
+
 const poolConfig: PoolConfig = {
   host: process.env.DB_HOST || "localhost",
   port: parseInt(process.env.DB_PORT || "5432", 10),
@@ -18,6 +28,14 @@ const poolConfig: PoolConfig = {
   // SSL configuration for cloud databases like Supabase
   ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
 };
+
+// Debug the actual pool configuration
+console.log('🔧 Pool Configuration:');
+console.log('Host:', poolConfig.host);
+console.log('Port:', poolConfig.port);
+console.log('Database:', poolConfig.database);
+console.log('User:', poolConfig.user);
+console.log('SSL:', poolConfig.ssl);
 
 // Create a new pool instance
 export const pool = new Pool(poolConfig);
