@@ -2,8 +2,25 @@ services:
   - type: web
     name: webappadminbe
     env: node
-    buildCommand: npm ci && npm run build && echo "Build completed, checking files:" && ls -la && echo "Dist contents:" && ls -la dist/
-    startCommand: chmod +x start.sh && ./start.sh
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DB_HOST
+        value: aws-1-us-west-1.pooler.supabase.com
+      - key: DB_PORT
+        value: 5432
+      - key: DB_NAME
+        value: postgres
+      - key: DB_USER
+        value: postgres.fyakhccoblsnkgtacgxk
+      - key: DB_PASSWORD
+        value: E7KawT7MDbdcAEr4F3PS
+      - key: DB_SSL
+        value: true
     envVars:
       - key: NODE_ENV
         value: production
