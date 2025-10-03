@@ -2,13 +2,8 @@ services:
   - type: web
     name: webappadminbe
     env: node
-    buildCommand: npm ci && npm run build
-    startCommand: npm startes:
-  - type: web
-    name: webappadminbe
-    env: node
-    buildCommand: npm ci && npm run build && ls -la dist/ && pwd
-    startCommand: cd /opt/render/project && node dist/index.js
+    buildCommand: npm ci && npm run build && echo "Build completed, checking files:" && ls -la && echo "Dist contents:" && ls -la dist/
+    startCommand: chmod +x start.sh && ./start.sh
     envVars:
       - key: NODE_ENV
         value: production
