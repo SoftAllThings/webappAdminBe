@@ -15,6 +15,8 @@ const poolConfig: PoolConfig = {
     process.env.DB_CONNECTION_TIMEOUT || "2000",
     10
   ),
+  // SSL configuration for cloud databases like Supabase
+  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
 };
 
 // Create a new pool instance
