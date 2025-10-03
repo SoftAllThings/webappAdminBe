@@ -36,7 +36,7 @@ class Server {
     const allowedOrigins = [
       "http://localhost:3000",
       "https://webappadmin.pages.dev",
-      "https://softallthings.com"
+      "https://softallthings.com",
     ];
 
     this.app.use(
