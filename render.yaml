@@ -9,29 +9,12 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: DB_HOST
-        value: aws-1-us-west-1.pooler.supabase.com
-      - key: DB_PORT
-        value: 5432
-      - key: DB_NAME
-        value: postgres
-      - key: DB_USER
-        value: postgres.fyakhccoblsnkgtacgxk
-      - key: DB_PASSWORD
-        value: E7KawT7MDbdcAEr4F3PS
-      - key: DB_SSL
-        value: true
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 10000
       - key: FRONTEND_URL
-        value: https://webappadmin.pages.dev
+        value: https://softallthings.com
       - key: DB_HOST
-        value: aws-1-us-west-1.pooler.supabase.com
+        value: aws-0-us-west-1.pooler.supabase.com
       - key: DB_PORT
-        value: 5432
+        value: 6543
       - key: DB_NAME
         value: postgres
       - key: DB_USER
@@ -39,11 +22,11 @@ services:
       - key: DB_PASSWORD
         value: E7KawT7MDbdcAEr4F3PS
       - key: DB_MAX_CONNECTIONS
-        value: 20
+        value: 5
       - key: DB_IDLE_TIMEOUT
-        value: 30000
+        value: 300000
       - key: DB_CONNECTION_TIMEOUT
-        value: 2000
+        value: 60000
       - key: DB_SSL
         value: true
     scaling:
