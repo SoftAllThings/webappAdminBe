@@ -11,23 +11,19 @@ services:
         value: 10000
       - key: FRONTEND_URL
         value: https://softallthings.com
-      - key: DB_HOST
-        value: aws-0-us-west-1.pooler.supabase.com
-      - key: DB_PORT
-        value: 6543
-      - key: DB_NAME
-        value: postgres
-      - key: DB_USER
-        value: postgres.fyakhccoblsnkgtacgxk
-      - key: DB_PASSWORD
-        value: E7KawT7MDbdcAEr4F3PS
-      - key: DB_MAX_CONNECTIONS
-        value: 5
-      - key: DB_IDLE_TIMEOUT
-        value: 300000
-      - key: DB_CONNECTION_TIMEOUT
-        value: 60000
-      - key: DB_SSL
-        value: true
     scaling:
       minInstances: 1
+
+# IMPORTANT: Set these environment variables in Render Dashboard for security:
+# JWT_SECRET=your-super-secret-jwt-key-B0nQHfEb5jy5-production-2024
+# ADMIN_USERNAME=admin  
+# ADMIN_PASSWORD=B0nQHfEb5jy5
+# DB_HOST=aws-0-us-west-1.pooler.supabase.com
+# DB_PORT=6543
+# DB_NAME=postgres
+# DB_USER=postgres.fyakhccoblsnkgtacgxk
+# DB_PASSWORD=E7KawT7MDbdcAEr4F3PS
+# DB_SSL=true
+# DB_MAX_CONNECTIONS=5
+# DB_IDLE_TIMEOUT=300000
+# DB_CONNECTION_TIMEOUT=60000
