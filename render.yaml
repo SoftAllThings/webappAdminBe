@@ -13,10 +13,9 @@ services:
         value: https://softallthings.com
     scaling:
       minInstances: 1
-
 # IMPORTANT: Set these environment variables in Render Dashboard for security:
 # JWT_SECRET=your-super-secret-jwt-key-B0nQHfEb5jy5-production-2024
-# ADMIN_USERNAME=admin  
+# ADMIN_USERNAME=admin
 # ADMIN_PASSWORD=B0nQHfEb5jy5
 # DB_HOST=aws-0-us-west-1.pooler.supabase.com
 # DB_PORT=6543

@@ -15,6 +15,9 @@ export class PoopController {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
+      const bristolType = req.query.bristol_type
+        ? parseInt(req.query.bristol_type as string)
+        : undefined;
 
       // Validate pagination parameters
       if (page < 1 || limit < 1 || limit > 100) {
@@ -28,7 +31,22 @@ export class PoopController {
         return;
       }
 
-      const { records, total } = await poopService.getAllPoops(page, limit);
+      // Validate bristol_type parameter
+      if (bristolType !== undefined && (bristolType < 1 || bristolType > 7)) {
+        res.status(400).json({
+          success: false,
+          error: {
+            message: "Invalid bristol_type parameter. Must be between 1 and 7.",
+          },
+        });
+        return;
+      }
+
+      const { records, total } = await poopService.getAllPoops(
+        page,
+        limit,
+        bristolType
+      );
 
       const response: PoopListResponse = {
         success: true,
@@ -37,6 +55,7 @@ export class PoopController {
           total,
           page,
           limit,
+          ...(bristolType !== undefined && { bristolType }),
         },
       };
 
@@ -50,9 +69,7 @@ export class PoopController {
         },
       });
     }
-  }
-
-  // GET /api/poop/:id - Get a single poop record by ID
+  } // GET /api/poop/:id - Get a single poop record by ID
   async getPoopById(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;

@@ -150,6 +150,7 @@ export interface PoopListResponse extends ApiResponse<PoopRecord[]> {
     total: number;
     page: number;
     limit: number;
+    bristolType?: number;
   };
 }
 

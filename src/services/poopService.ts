@@ -5,23 +5,49 @@ export class PoopService {
   // Get all poop records with pagination
   async getAllPoops(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
+    bristolType?: number
   ): Promise<{ records: PoopRecord[]; total: number }> {
     try {
       const offset = (page - 1) * limit;
 
+      // Build dynamic query based on bristol_type filter
+      let countQuery = "SELECT COUNT(*) as total FROM app.poop";
+      let dataQuery = "SELECT * FROM app.poop";
+      const queryParams: any[] = [];
+
+      // Always include image_good_for_ml IS NULL condition
+      countQuery += " WHERE image_good_for_ml IS NULL";
+      dataQuery += " WHERE image_good_for_ml IS NULL";
+
+      if (bristolType !== undefined && bristolType !== null) {
+        countQuery += " AND bristol_type = $1";
+        dataQuery += " AND bristol_type = $1";
+        queryParams.push(bristolType);
+      }
+
       // Get total count
-      const countQuery = "SELECT COUNT(*) as total FROM app.poop";
-      const countResult = await pool.query(countQuery);
+      const countResult = await pool.query(
+        countQuery,
+        bristolType !== undefined && bristolType !== null ? [bristolType] : []
+      );
       const total = parseInt(countResult.rows[0]?.total || "0");
 
+      // For bristol_type filtering, limit to 300 records max
+      const maxLimit =
+        bristolType !== undefined && bristolType !== null
+          ? Math.min(limit, 300)
+          : limit;
+
       // Get paginated records
-      const query = `
-        SELECT * FROM app.poop 
-        ORDER BY created_at DESC 
-        LIMIT $1 OFFSET $2
-      `;
-      const result = await pool.query(query, [limit, offset]);
+      dataQuery +=
+        " ORDER BY created_at DESC LIMIT $" +
+        (queryParams.length + 1) +
+        " OFFSET $" +
+        (queryParams.length + 2);
+      queryParams.push(maxLimit, offset);
+
+      const result = await pool.query(dataQuery, queryParams);
 
       return {
         records: result.rows,

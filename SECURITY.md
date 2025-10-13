@@ -25,7 +25,7 @@ DB_MAX_CONNECTIONS=5
 DB_IDLE_TIMEOUT=300000
 DB_CONNECTION_TIMEOUT=60000
 
-# Server Configuration  
+# Server Configuration
 NODE_ENV=production
 PORT=10000
 FRONTEND_URL=https://your-frontend-domain.com
@@ -42,6 +42,7 @@ FRONTEND_URL=https://your-frontend-domain.com
 ### Local Development
 
 1. Copy `.env.example` to `.env`:
+
    ```bash
    cp .env.example .env
    ```
@@ -53,7 +54,7 @@ FRONTEND_URL=https://your-frontend-domain.com
 ### Security Best Practices
 
 - ✅ Use strong, random JWT secrets (32+ characters)
-- ✅ Use secure passwords with special characters  
+- ✅ Use secure passwords with special characters
 - ✅ Set environment variables in deployment dashboard
 - ✅ Never commit `.env` files to GitHub
 - ❌ Never put credentials in YAML/config files that are committed
