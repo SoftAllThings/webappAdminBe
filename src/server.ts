@@ -35,6 +35,7 @@ class Server {
     // CORS configuration
     const allowedOrigins = [
       "http://localhost:3000",
+      "http://localhost:3002",
       "https://webappadmin.pages.dev",
       "https://softallthings.com",
     ];

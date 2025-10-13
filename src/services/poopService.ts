@@ -33,11 +33,8 @@ export class PoopService {
       );
       const total = parseInt(countResult.rows[0]?.total || "0");
 
-      // For bristol_type filtering, limit to 300 records max
-      const maxLimit =
-        bristolType !== undefined && bristolType !== null
-          ? Math.min(limit, 300)
-          : limit;
+      // Always limit to 100 records max (both filtered and unfiltered)
+      const maxLimit = Math.min(limit, 100);
 
       // Get paginated records
       dataQuery +=
