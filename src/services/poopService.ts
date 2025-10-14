@@ -2,6 +2,64 @@ import { pool } from "../config/database";
 import { PoopRecord, CreatePoopRecord, UpdatePoopRecord } from "../types/poop";
 
 export class PoopService {
+  // Helper method to execute queries with retry logic
+  private async executeQuery(
+    query: string,
+    params: any[] = [],
+    retries: number = 3
+  ): Promise<any> {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        console.log(`🔄 Query attempt ${attempt}/${retries}`);
+        const result = await pool.query(query, params);
+        console.log(`✅ Query successful on attempt ${attempt}`);
+        return result;
+      } catch (error: any) {
+        console.error(
+          `❌ Query attempt ${attempt}/${retries} failed:`,
+          error.message
+        );
+        console.error(`❌ Error code: ${error.code}`);
+
+        // If it's a connection error and we have retries left, wait and try again
+        if (attempt < retries && this.isConnectionError(error)) {
+          console.log(`🔄 Retrying in ${attempt * 1000}ms...`);
+          await this.delay(attempt * 1000);
+          continue;
+        }
+
+        // Re-throw the error if we're out of retries or it's not a connection error
+        console.error(`❌ Giving up after ${attempt} attempts`);
+        throw error;
+      }
+    }
+    throw new Error("All retry attempts failed");
+  }
+
+  // Helper to identify connection errors
+  private isConnectionError(error: any): boolean {
+    const connectionErrorCodes = [
+      "ECONNRESET",
+      "ECONNREFUSED",
+      "ETIMEDOUT",
+      "ENOTFOUND",
+      "XX000", // Supabase termination code
+    ];
+
+    return connectionErrorCodes.some(
+      (code) =>
+        error.code === code ||
+        error.message?.includes(code) ||
+        error.message?.includes("shutdown") ||
+        error.message?.includes("termination")
+    );
+  }
+
+  // Helper for delays
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   // Get all poop records with pagination
   async getAllPoops(
     page: number = 1,
@@ -96,9 +154,23 @@ export class PoopService {
     data: Partial<UpdatePoopRecord>
   ): Promise<PoopRecord | null> {
     try {
-      const entries = Object.entries(data).filter(
-        ([key, value]) => key !== "id" && value !== undefined
-      );
+      console.log("📝 updatePoop called with:", { id, data });
+
+      const entries = Object.entries(data).filter(([key, value]) => {
+        // Filter out read-only fields and undefined values
+        const readOnlyFields = [
+          "id",
+          "created_at",
+          "updated_at",
+          "s3_key",
+          "s3_url",
+          "gpt_bristol_type",
+          "user_id",
+        ];
+        return !readOnlyFields.includes(key) && value !== undefined;
+      });
+
+      console.log("📝 Filtered entries (excluding read-only fields):", entries);
 
       if (entries.length === 0) {
         throw new Error("No valid fields to update");
@@ -116,10 +188,15 @@ export class PoopService {
         RETURNING *
       `;
 
-      const result = await pool.query(query, values);
+      console.log("� Generated query:", query);
+      console.log("📝 Query values:", values);
+
+      console.log("�🔄 Executing update query with retry logic...");
+      const result = await this.executeQuery(query, values);
+      console.log("✅ Update successful, result:", result.rows[0]);
       return result.rows[0] || null;
     } catch (error) {
-      console.error("Error updating poop record:", error);
+      console.error("❌ Error updating poop record:", error);
       throw error;
     }
   }

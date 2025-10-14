@@ -2,7 +2,7 @@
 // Based on the app.poop table schema
 
 export interface PoopRecord {
-  id: string;
+  id: string; // not editable
   bristol_type: number;
   consistency: number;
   shape: number;
@@ -12,10 +12,6 @@ export interface PoopRecord {
   blood: number;
   mucus: number;
   floating: number;
-  smell_level: number;
-  pain_level: number;
-  duration: number;
-  verified: boolean;
   liver_flukes: number;
   colon_cancer: number;
   hemorrhoids: number;
@@ -38,11 +34,12 @@ export interface PoopRecord {
   bile_duct_obstruction: number;
   malabsorption_syndrome: number;
   rapid_gastrointestinal_transit: number;
-  created_at?: string;
-  updated_at?: string;
-  s3_key?: string | null;
-  s3_url?: string | null;
-  gpt_bristol_type?: string | null;
+  created_at?: string; // not editable
+  updated_at?: string; // not editable
+  s3_key?: string | null; // not editable
+  s3_url?: string | null; // not editable
+  gpt_bristol_type?: string | null; // not editable
+  image_good_for_ml?: boolean | null;
 }
 
 // For creating new records (without ID and timestamps)

@@ -9,23 +9,29 @@ const poolConfig: PoolConfig = {
   database: process.env.DB_NAME || "webappadmin",
   user: process.env.DB_USER || "postgres",
   password: process.env.DB_PASSWORD || "",
-  max: parseInt(process.env.DB_MAX_CONNECTIONS || "20", 10),
-  idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || "30000", 10),
+  max: parseInt(process.env.DB_MAX_CONNECTIONS || "5", 10), // Reduced for Supabase
+  idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || "10000", 10), // Reduced timeout
   connectionTimeoutMillis: parseInt(
-    process.env.DB_CONNECTION_TIMEOUT || "2000",
+    process.env.DB_CONNECTION_TIMEOUT || "5000",
     10
-  ),
-  // SSL configuration for cloud databases like Supabase
+  ), // Increased timeout
+  // Supabase specific settings
   ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+  // Add query timeout
+  query_timeout: 10000,
+  // Add keepalive settings
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
 };
 
 // Create a new pool instance
 export const pool = new Pool(poolConfig);
 
-// Handle pool errors
+// Handle pool errors - don't crash the app
 pool.on("error", (err) => {
-  console.error("Unexpected error on idle client", err);
-  process.exit(-1);
+  console.error("Unexpected error on idle client error:", err);
+  // Log the error but don't exit - let the pool recover
+  console.log("🔄 Pool will attempt to recover...");
 });
 
 // Test database connection

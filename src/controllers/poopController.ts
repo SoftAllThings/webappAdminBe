@@ -166,6 +166,8 @@ export class PoopController {
       const { id } = req.params;
       const data: Partial<UpdatePoopRecord> = req.body;
 
+      console.log("🔧 updatePoop controller called with:", { id, data });
+
       if (!id) {
         res.status(400).json({
           success: false,
@@ -177,8 +179,10 @@ export class PoopController {
       }
 
       // Check if record exists first
+      console.log("🔍 Checking if record exists...");
       const existingRecord = await poopService.getPoopById(id);
       if (!existingRecord) {
+        console.log("❌ Record not found");
         res.status(404).json({
           success: false,
           error: {
@@ -188,6 +192,7 @@ export class PoopController {
         return;
       }
 
+      console.log("✅ Record exists, proceeding with update...");
       const updatedRecord = await poopService.updatePoop(id, data);
 
       const response: PoopDetailResponse = {
@@ -195,9 +200,11 @@ export class PoopController {
         data: updatedRecord!,
       };
 
+      console.log("✅ Update completed successfully");
       res.status(200).json(response);
     } catch (error) {
-      console.error("Error in updatePoop:", error);
+      console.error("❌ Error in updatePoop controller:", error);
+      console.error("❌ Error stack:", (error as Error).stack);
       res.status(500).json({
         success: false,
         error: {
