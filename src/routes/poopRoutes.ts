@@ -18,6 +18,11 @@ router.post("/", poopController.createPoop.bind(poopController));
 // PUT /api/poop/:id - Update an existing poop record
 router.put("/:id", poopController.updatePoop.bind(poopController));
 
+router.get(
+  "/lastTypeVerified",
+  poopController.getLastTypeVerified.bind(poopController)
+);
+
 // Note: DELETE operation is intentionally omitted as requested
 
 export default router;

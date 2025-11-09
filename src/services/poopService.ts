@@ -148,6 +148,26 @@ export class PoopService {
     }
   }
 
+  async getLastTypeVerified(): Promise<number | null> {
+    try {
+      const query = `
+        SELECT bristol_type FROM app.poop
+        WHERE image_good_for_ml = TRUE
+        ORDER BY first_check_date DESC
+        LIMIT 1
+      `;
+      const result = await pool.query(query);
+      if (result.rows.length > 0) {
+        return result.rows[0];
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error("Error fetching last verified bristol type:", error);
+      throw error;
+    }
+  }
+
   // Update an existing poop record
   async updatePoop(
     id: string,

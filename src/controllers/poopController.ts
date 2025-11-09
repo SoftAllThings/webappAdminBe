@@ -112,7 +112,6 @@ export class PoopController {
       });
     }
   }
-
   // POST /api/poop - Create a new poop record
   async createPoop(req: Request, res: Response): Promise<void> {
     try {
@@ -155,6 +154,24 @@ export class PoopController {
         success: false,
         error: {
           message: "Failed to create poop record",
+        },
+      });
+    }
+  }
+
+  async getLastTypeVerified(req: Request, res: Response): Promise<void> {
+    try {
+      const record = await poopService.getLastTypeVerified();
+      res.status(200).json({
+        success: true,
+        data: record,
+      });
+    } catch (error) {
+      console.error("Error in getLastTypeVerified:", error);
+      res.status(500).json({
+        success: false,
+        error: {
+          message: "Failed to fetch last verified bristol type",
         },
       });
     }
