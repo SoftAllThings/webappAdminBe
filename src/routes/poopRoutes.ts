@@ -15,6 +15,12 @@ router.get(
   poopController.getLastTypeVerified.bind(poopController)
 );
 
+// GET /api/poop/bristolStats - Get Bristol type stats (must be before /:id route)
+router.get(
+  "/bristolStats",
+  poopController.getBristolStats.bind(poopController)
+);
+
 // GET /api/poop/:id - Get a single poop record by ID
 router.get("/:id", poopController.getPoopById.bind(poopController));
 

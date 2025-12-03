@@ -168,6 +168,28 @@ export class PoopService {
     }
   }
 
+  // Get Bristol type stats from readyToTrainView
+  async getBristolStats(): Promise<
+    Array<{ bristol_type: number; num: number }>
+  > {
+    try {
+      const query = `
+        SELECT bristol_type, count(bristol_type) as num
+        FROM app.readyToTrainView
+        GROUP BY bristol_type
+        ORDER BY bristol_type
+      `;
+      const result = await pool.query(query);
+      return result.rows.map((row) => ({
+        bristol_type: row.bristol_type,
+        num: parseInt(row.num),
+      }));
+    } catch (error) {
+      console.error("Error fetching bristol stats:", error);
+      throw error;
+    }
+  }
+
   // Update an existing poop record
   async updatePoop(
     id: string,

@@ -177,6 +177,25 @@ export class PoopController {
     }
   }
 
+  // GET /api/poop/bristolStats - Get Bristol type stats from readyToTrainView
+  async getBristolStats(req: Request, res: Response): Promise<void> {
+    try {
+      const stats = await poopService.getBristolStats();
+      res.status(200).json({
+        success: true,
+        data: stats,
+      });
+    } catch (error) {
+      console.error("Error in getBristolStats:", error);
+      res.status(500).json({
+        success: false,
+        error: {
+          message: "Failed to fetch bristol stats",
+        },
+      });
+    }
+  }
+
   // PUT /api/poop/:id - Update an existing poop record
   async updatePoop(req: Request, res: Response): Promise<void> {
     try {
