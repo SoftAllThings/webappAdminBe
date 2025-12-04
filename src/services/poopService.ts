@@ -75,8 +75,8 @@ export class PoopService {
       const queryParams: any[] = [];
 
       // Always include image_good_for_ml IS NULL condition
-      countQuery += " WHERE image_good_for_ml IS NULL";
-      dataQuery += " WHERE image_good_for_ml IS NULL";
+      countQuery += " WHERE image_good_for_ml IS NULL AND skipped <> 1";
+      dataQuery += " WHERE image_good_for_ml IS NULL AND skipped <> 1";
 
       if (bristolType !== undefined && bristolType !== null) {
         countQuery += " AND bristol_type = $1";

@@ -40,6 +40,7 @@ export interface PoopRecord {
   s3_url?: string | null; // not editable
   gpt_bristol_type?: string | null; // not editable
   image_good_for_ml?: boolean | null;
+  skipped: boolean | null;
 }
 
 // For creating new records (without ID and timestamps)
