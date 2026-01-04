@@ -168,22 +168,55 @@ export class PoopService {
     }
   }
 
-  // Get Bristol type stats from readyToTrainView
-  async getBristolStats(): Promise<
-    Array<{ bristol_type: number; num: number }>
-  > {
+  // Get Bristol type stats from readyToTrainView with summary statistics
+  async getBristolStats(): Promise<{
+    bristolStats: Array<{ bristol_type: number; num: number }>;
+    summary: {
+      totalPoops: number;
+      handledPoops: number;
+      readyForAI: number;
+      remainingToHandle: number;
+    };
+  }> {
     try {
-      const query = `
-        SELECT bristol_type, count(bristol_type) as num
-        FROM app.readyToTrainView
-        GROUP BY bristol_type
-        ORDER BY bristol_type
-      `;
-      const result = await pool.query(query);
-      return result.rows.map((row) => ({
-        bristol_type: row.bristol_type,
-        num: parseInt(row.num),
-      }));
+      // Execute all queries in parallel for efficiency
+      const [bristolResult, totalResult, handledResult, readyResult] =
+        await Promise.all([
+          // Existing Bristol stats query
+          pool.query(`
+          SELECT bristol_type, count(bristol_type) as num
+          FROM app.readyToTrainView
+          GROUP BY bristol_type
+          ORDER BY bristol_type
+        `),
+          // Total poops count
+          pool.query(`SELECT COUNT(*) as count FROM app.poop`),
+          // Handled poops count (image_good_for_ml IS NOT NULL OR skipped IS NOT NULL)
+          pool.query(`
+          SELECT COUNT(*) as count FROM app.poop
+          WHERE image_good_for_ml IS NOT NULL OR skipped IS NOT NULL
+        `),
+          // Ready for AI count (from readyToTrainView)
+          pool.query(`SELECT COUNT(*) as count FROM app.readyToTrainView`),
+        ]);
+
+      const totalPoops = parseInt(totalResult.rows[0]?.count || "0");
+      const handledPoops = parseInt(handledResult.rows[0]?.count || "0");
+      const readyForAI = parseInt(readyResult.rows[0]?.count || "0");
+      const remainingToHandle = totalPoops - readyForAI;
+
+      return {
+        bristolStats: bristolResult.rows.map((row) => ({
+          bristol_type: row.bristol_type,
+          num: parseInt(row.num),
+        })),
+        summary: {
+          totalPoops,
+          handledPoops,
+          readyForAI,
+          remainingToHandle,
+        },
+      };
     } catch (error) {
       console.error("Error fetching bristol stats:", error);
       throw error;
