@@ -1,19 +1,7 @@
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { Request, Response } from "express";
+import { authService } from "../services/authService";
+import { AuthenticatedRequest } from "../middleware/auth.middleware";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET environment variable is required");
-}
-
-if (!ADMIN_PASSWORD) {
-  throw new Error("ADMIN_PASSWORD environment variable is required");
-}
-
-// Login endpoint
 export const login = (req: Request, res: Response): void => {
   try {
     const { username, password } = req.body;
@@ -26,27 +14,12 @@ export const login = (req: Request, res: Response): void => {
       return;
     }
 
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      // Generate JWT token
-      const token = jwt.sign(
-        {
-          username: ADMIN_USERNAME,
-          role: "admin",
-          iat: Math.floor(Date.now() / 1000),
-        },
-        JWT_SECRET,
-        { expiresIn: "24h" }
-      );
+    if (authService.validateCredentials(username, password)) {
+      const result = authService.generateToken(username);
 
       res.json({
         success: true,
-        data: {
-          token,
-          user: {
-            username: ADMIN_USERNAME,
-            role: "admin",
-          },
-        },
+        data: result,
       });
     } else {
       res.status(401).json({
@@ -63,46 +36,16 @@ export const login = (req: Request, res: Response): void => {
   }
 };
 
-// Middleware to verify JWT token
-export const authenticateToken = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
-
-  if (!token) {
-    res.status(401).json({
-      success: false,
-      error: { message: "Access token required" },
-    });
-    return;
-  }
-
-  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
-    if (err) {
-      res.status(403).json({
-        success: false,
-        error: { message: "Invalid or expired token" },
-      });
-      return;
-    }
-
-    // Add user info to request object
-    (req as any).user = user;
-    next();
-  });
-};
-
-// Verify token endpoint (for checking if token is still valid)
-export const verifyToken = (req: Request, res: Response) => {
-  // If we reach here, the token is valid (middleware passed)
+export const verifyToken = (req: Request, res: Response): void => {
+  const authReq = req as AuthenticatedRequest;
   res.json({
     success: true,
     data: {
-      user: (req as any).user,
+      user: authReq.user,
       valid: true,
     },
   });
 };
+
+// Re-export middleware for backwards compatibility
+export { authenticateToken } from "../middleware/auth.middleware";
