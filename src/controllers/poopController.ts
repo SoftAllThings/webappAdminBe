@@ -44,7 +44,7 @@ export class PoopController {
       const { records, total } = await poopService.getAllPoops(
         page,
         limit,
-        bristolType
+        bristolType 
       );
 
       const response: PoopListResponse = {
