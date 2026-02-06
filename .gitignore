@@ -79,6 +79,9 @@ jspm_packages/
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
 
+# Firebase service account key
+serviceAccountKey.json
+
 # Mac files
 .DS_Store
 
