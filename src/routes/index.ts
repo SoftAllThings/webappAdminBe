@@ -4,7 +4,6 @@ import { authenticateToken } from "../controllers/authController";
 import authRoutes from "./authRoutes";
 import poopRoutes from "./poopRoutes";
 import analyticsRoutes from './analyticsRoutes'
-import firebaseRoutes from './firebaseRoutes'
 
 const router = Router();
 
@@ -20,8 +19,6 @@ router.use("/auth", authRoutes);
 // Protected routes (require authentication)
 router.use("/poop", authenticateToken, poopRoutes);
 
-router.use("/analytics", analyticsRoutes)
-
-router.use("/firebase", firebaseRoutes)
+router.use("/firebase", analyticsRoutes)
 
 export default router;

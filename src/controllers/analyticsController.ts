@@ -1,15 +1,17 @@
 import { Request, Response } from "express";
 import { analyticsService } from "../services/analyticsService";
+import { MetricType } from "../config/metrics_config";
+
 
 export class AnalyticsController {
   async getAnalytics(req: Request, res: Response): Promise<void> {
     try {
-      const metric = req.query.metric as string | undefined;
+      const metric = req.query.metric as MetricType | undefined;
       const from = req.query.from as string | undefined;
       const to = req.query.to as string | undefined;
 
       // Validazioni super semplici (per ora)
-      if (!metric || !from || !to) {
+      if (!metric || !from || !to ) {
         res.status(400).json({
           success: false,
           error: { message: "Missing query params: metric, from, to" },
@@ -17,15 +19,9 @@ export class AnalyticsController {
         return;
       }
 
-      if (metric !== "dailyPosts") {
-        res.status(400).json({
-          success: false,
-          error: { message: "Only metric supported for now: dailyPosts" },
-        });
-        return;
-      }
+     
 
-      const result = await analyticsService.getDailyPosts(from, to);
+      const result = await analyticsService.getData(metric, from, to);
 
       res.status(200).json({
         success: true,

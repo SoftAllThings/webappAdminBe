@@ -19,7 +19,7 @@ export class AnalyticsRepository {
       ORDER BY DATE(created_at);`;
 
     const result = await pool.query(query, [from, to]);
-
+    //console.log(result)
     return result.rows.map(r => ({
       date: r.date.toISOString().slice(0,10),
       value: Number(r.value),
@@ -29,3 +29,5 @@ export class AnalyticsRepository {
 }
 
 export const analyticsRepository = new AnalyticsRepository();
+
+analyticsRepository.getDailyPosts('2026-02-01', '2026-02-02')
