@@ -1,12 +1,23 @@
 import admin from "firebase-admin";
 import path from "path";
+import fs from "fs";
 
-const serviceAccountPath = path.resolve(
-  process.env.FIREBASE_SERVICE_ACCOUNT_PATH || "./serviceAccountKey.json"
-);
+let serviceAccount: admin.ServiceAccount;
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const serviceAccount = require(serviceAccountPath);
+if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+} else {
+  const serviceAccountPath = path.resolve(
+    process.env.FIREBASE_SERVICE_ACCOUNT_PATH || "./serviceAccountKey.json"
+  );
+  if (!fs.existsSync(serviceAccountPath)) {
+    throw new Error(
+      `Firebase service account key not found. Set FIREBASE_SERVICE_ACCOUNT_KEY env var or provide the file at ${serviceAccountPath}`
+    );
+  }
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  serviceAccount = require(serviceAccountPath);
+}
 
 if (!admin.apps.length) {
   admin.initializeApp({
