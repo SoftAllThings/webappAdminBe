@@ -1,4 +1,4 @@
-export type MetricType = 'users' | 'poops' | 'aiChats' | 'journal' | 'feedComments';
+export type MetricType = 'users' | 'poops' | 'aiChats' | 'journal' | 'feedComments' | 'feedPosts';
 
 
 export const METRIC_CONFIG = {
@@ -29,6 +29,11 @@ export const METRIC_CONFIG = {
 
     feedComments: {
         collection: "feedComments",
+        dateField: "createdDate",
+        dateType: "ISO-String"
+    },
+    feedPosts: {
+        collection: "feedPosts",
         dateField: "createdDate",
         dateType: "ISO-String"
     }
