@@ -1,6 +1,6 @@
   import { db } from "../config/firebase";
   import { METRIC_CONFIG, MetricType } from "../config/metrics_config";
-  import { Timestamp } from "firebase-admin/firestore";
+  import {Timestamp} from 'firebase-admin/firestore'
 
   export type AnalyticsMetric = {
     date: string;
@@ -9,8 +9,10 @@
 
   export type AnalyticsResult = {
     data: AnalyticsMetric[];
-    average: number;
-    total: number;
+    average: number | null;
+    total: number |null ;
+    max: number | null;
+    min: number | null;
   }
 
   export class AnalyticsService {
@@ -20,34 +22,77 @@
       
       const config = METRIC_CONFIG[metric as keyof typeof METRIC_CONFIG]
 
-      const fromISO = new Date(from).toISOString();
-      const toDate = new Date(to)
-      toDate.setHours(23, 59, 59);
-      const toISO = toDate.toISOString()
 
+      let fromDate: any;
+      let toDate: any;
+
+      if (config.dateType === "ISO-String") {
+        fromDate = new Date(from).toISOString();
+        const toISODay = new Date(to)
+        toISODay.setHours(23, 59, 59);
+        toDate = toISODay.toISOString()
+      } else {
+        fromDate = Timestamp.fromDate(new Date(from));
+        const toTimeStamp = new Date(to)
+        toTimeStamp.setHours(23,590,59)
+        toDate = Timestamp.fromDate(toTimeStamp)
+      }
 
       if (!config) {throw new Error ('Unsupported metric')};
 
 
     
       const snapshot = await db.collection(config.collection)
-        .where(config.dateField, ">=", fromISO)
-        .where(config.dateField, "<=",toISO)
+        .where(config.dateField, ">=", fromDate)
+        .where(config.dateField, "<=",toDate)
         .get();
 
       if (snapshot.empty) {
-        throw new Error("No users found in Firestore");
+        return {
+          data: [],
+          total: null,
+          average: null,
+          max: null,
+          min: null,
+        }
       }
 
       const docs = snapshot.docs;
-      const dates = docs.map(doc =>
-    doc.get(config.dateField).slice(0, 10)
+      const dates = docs.map(doc =>{
+        const rawDate = doc.get(config.dateField);
+        if (typeof rawDate === 'string') {
+          return rawDate.slice(0,10);
+        } else {
+          return rawDate.toDate().toISOString().slice(0,10)
+        }
+
+      }
   );
 
-    const counts: Record<string, number> = {};
+
+  const findDatesInBetween = (from: string, to: string): string[] => {
+    const datesInBetween: string[] = [];
+    const additionalDate = new Date(from)
+
+    while (additionalDate <= new Date(to)) {
+      datesInBetween.push(additionalDate.toISOString().slice(0,10))
+      additionalDate.setDate(additionalDate.getDate() + 1)
+    }
+      
+    return datesInBetween;
+  }
+
+  const allDays = findDatesInBetween(from, to);
+
+  const counts: Record<string, number> = {}
+  allDays.forEach(day => {
+    counts[day] = 0;
+  })
+
 
   dates.forEach(date => {
-    counts[date] = (counts[date] || 0) + 1;
+    if (counts[date] !== undefined)
+    {counts[date] += 1;}
   });
 
 
@@ -58,11 +103,17 @@
     })
   );
   const total = analyticsData.reduce((sum, d) => sum + d.value,0);
-    const average = analyticsData.length > 0 ? total / analyticsData.length : 0
-      return {data: analyticsData, average, total};
+    const average = analyticsData.length > 0 ? total / analyticsData.length : 0;
+
+    const max = analyticsData.reduce((max, d) => (max > d.value? max : d.value),0);
+
+    const min = analyticsData.reduce((min, d) => (d.value>min? min : d.value), Infinity)
+
+      return {data: analyticsData, average, total, max, min};
     }
   }
 
   
   export const analyticsService = new AnalyticsService();
 
+analyticsService.getData('users', '2026-01-02', '2026-01-04')

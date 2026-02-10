@@ -96,7 +96,9 @@ class Server {
   public async start(): Promise<void> {
     try {
       // Test database connection
-      await testConnection();
+      if (process.env.NODE_ENV !== "development") {
+  await testConnection();
+}
 
       // Start the server
       this.app.listen(this.port, () => {

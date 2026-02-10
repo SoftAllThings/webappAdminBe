@@ -1,13 +1,36 @@
-export type MetricType = 'users' | 'poops'
+export type MetricType = 'users' | 'poops' | 'aiChats' | 'journal' | 'feedComments';
 
 
 export const METRIC_CONFIG = {
     users: {
         collection: "users",
-        dateField: "createdAt"
+        dateField: "createdAt",
+        dateType: 'ISO-String'
+
     },
     poops: {
         collection: "poops",
-        dateField: "createdDate"
+        dateField: "createdDate",
+        dateType: 'ISO-String'
+
     },
+    aiChats: {
+        collection: "aiChats",
+        dateField: "createdDate",
+        dateType: 'TimeStamp'
+
+    },
+    journal: {
+        collection: "journal",
+        dateField: "createdDate",
+        dateType: 'TimeStamp'
+
+    },
+
+    feedComments: {
+        collection: "feedComments",
+        dateField: "createdDate",
+        dateType: "ISO-String"
+    }
+    
 } as const;
