@@ -10,6 +10,7 @@ dist/
 build/
 
 # Environment variables
+serviceAccountKey.json
 .env
 .env.local
 .env.development.local

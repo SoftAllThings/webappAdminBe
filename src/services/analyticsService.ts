@@ -1,6 +1,7 @@
   import { db } from "../config/firebase";
   import { METRIC_CONFIG, MetricType } from "../config/metrics_config";
   import {Timestamp} from 'firebase-admin/firestore'
+  import type { QueryDocumentSnapshot } from "firebase-admin/firestore";
 
   export type AnalyticsMetric = {
     date: string;
@@ -22,7 +23,7 @@
       
       const config = METRIC_CONFIG[metric as keyof typeof METRIC_CONFIG]
 
-
+     if (!config) {throw new Error ('Unsupported metric')};
       let fromDate: any;
       let toDate: any;
 
@@ -34,11 +35,11 @@
       } else {
         fromDate = Timestamp.fromDate(new Date(from));
         const toTimeStamp = new Date(to)
-        toTimeStamp.setHours(23,590,59)
+        toTimeStamp.setHours(23,59,59)
         toDate = Timestamp.fromDate(toTimeStamp)
       }
 
-      if (!config) {throw new Error ('Unsupported metric')};
+ 
 
 
     
@@ -58,7 +59,7 @@
       }
 
       const docs = snapshot.docs;
-      const dates = docs.map(doc =>{
+      const dates = docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) =>{
         const rawDate = doc.get(config.dateField);
         if (typeof rawDate === 'string') {
           return rawDate.slice(0,10);
@@ -90,7 +91,7 @@
   })
 
 
-  dates.forEach(date => {
+  dates.forEach((date:string) => {
     if (counts[date] !== undefined)
     {counts[date] += 1;}
   });
