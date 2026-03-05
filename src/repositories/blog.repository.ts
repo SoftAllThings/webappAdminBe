@@ -147,6 +147,23 @@ export class BlogRepository {
     return result.rows;
   }
 
+  async findImagesByPostIds(postIds: string[]): Promise<Map<string, BlogImageRow[]>> {
+    if (postIds.length === 0) return new Map();
+    const result = await pool.query(
+      `SELECT * FROM blog.images
+       WHERE post_id = ANY($1)
+       ORDER BY position_in_post ASC`,
+      [postIds]
+    );
+    const map = new Map<string, BlogImageRow[]>();
+    for (const row of result.rows) {
+      const list = map.get(row.post_id) || [];
+      list.push(row);
+      map.set(row.post_id, list);
+    }
+    return map;
+  }
+
   async findTagsByPostId(postId: string): Promise<BlogTagRow[]> {
     const result = await pool.query(
       `SELECT t.id, t.name, t.slug
@@ -157,6 +174,25 @@ export class BlogRepository {
       [postId]
     );
     return result.rows;
+  }
+
+  async findTagsByPostIds(postIds: string[]): Promise<Map<string, BlogTagRow[]>> {
+    if (postIds.length === 0) return new Map();
+    const result = await pool.query(
+      `SELECT pt.post_id, t.id, t.name, t.slug
+       FROM blog.tags t
+       JOIN blog.post_tags pt ON t.id = pt.tag_id
+       WHERE pt.post_id = ANY($1)
+       ORDER BY t.name`,
+      [postIds]
+    );
+    const map = new Map<string, BlogTagRow[]>();
+    for (const row of result.rows) {
+      const list = map.get(row.post_id) || [];
+      list.push({ id: row.id, name: row.name, slug: row.slug });
+      map.set(row.post_id, list);
+    }
+    return map;
   }
 
   async findAllCategories(): Promise<BlogCategoryRow[]> {

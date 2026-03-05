@@ -19,32 +19,33 @@ export class BlogController {
 
       const { rows: posts, total } = await blogRepository.findAllPosts(offset, limit, filters);
 
-      // Fetch hero image and tags for each post
-      const postsWithMeta = await Promise.all(
-        posts.map(async (post) => {
-          const [images, tags] = await Promise.all([
-            blogRepository.findImagesByPostId(post.id),
-            blogRepository.findTagsByPostId(post.id),
-          ]);
+      // Batch-fetch images and tags in 2 queries instead of 2*N
+      const postIds = posts.map((p) => p.id);
+      const [imagesMap, tagsMap] = await Promise.all([
+        blogRepository.findImagesByPostIds(postIds),
+        blogRepository.findTagsByPostIds(postIds),
+      ]);
 
-          const heroImage = images.find((img) => img.image_type === "hero");
+      const postsWithMeta = posts.map((post) => {
+        const images = imagesMap.get(post.id) || [];
+        const tags = tagsMap.get(post.id) || [];
+        const heroImage = images.find((img) => img.image_type === "hero");
 
-          return {
-            id: post.id,
-            title: post.title,
-            slug: post.slug,
-            excerpt: post.excerpt,
-            category: post.category_id
-              ? { id: post.category_id, name: post.category_name, slug: post.category_slug }
-              : null,
-            tags,
-            hero_image_url: heroImage?.s3_url || null,
-            published_at: post.published_at,
-            meta_title: post.meta_title,
-            target_keywords: post.target_keywords,
-          };
-        })
-      );
+        return {
+          id: post.id,
+          title: post.title,
+          slug: post.slug,
+          excerpt: post.excerpt,
+          category: post.category_id
+            ? { id: post.category_id, name: post.category_name, slug: post.category_slug }
+            : null,
+          tags,
+          hero_image_url: heroImage?.s3_url || null,
+          published_at: post.published_at,
+          meta_title: post.meta_title,
+          target_keywords: post.target_keywords,
+        };
+      });
 
       res.status(200).json({
         success: true,
