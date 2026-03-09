@@ -55,6 +55,9 @@ CREATE TABLE IF NOT EXISTS blog.posts (
         CHECK (status IN ('published', 'draft', 'archived')),
     published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
+    -- Logged status
+    already_logged BOOLEAN DEFAULT FALSE,
+
     -- Agent metadata
     generation_model VARCHAR(50),
     generation_duration_ms INTEGER,

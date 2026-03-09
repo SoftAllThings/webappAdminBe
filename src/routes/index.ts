@@ -22,7 +22,7 @@ router.use("/poop", authenticateToken, poopRoutes);
 
 router.use("/firebase", analyticsRoutes)
 
-// Blog routes (protected)
-router.use("/blog", authenticateToken, blogRoutes);
+// Blog routes (public - blog posts should be readable by everyone)
+router.use("/blog", blogRoutes);
 
 export default router;

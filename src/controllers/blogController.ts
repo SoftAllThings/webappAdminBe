@@ -44,6 +44,7 @@ export class BlogController {
           published_at: post.published_at,
           meta_title: post.meta_title,
           target_keywords: post.target_keywords,
+          already_logged: post.already_logged,
         };
       });
 
@@ -125,6 +126,32 @@ export class BlogController {
       res.status(500).json({
         success: false,
         error: { message: "Failed to fetch tags" },
+      });
+    }
+  }
+
+  async updatePostLoggedStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { already_logged } = req.body;
+
+      if (!id) {
+        res.status(400).json({ success: false, error: { message: "Missing post ID" } });
+        return;
+      }
+
+      if (typeof already_logged !== 'boolean') {
+        res.status(400).json({ success: false, error: { message: "already_logged must be a boolean" } });
+        return;
+      }
+
+      await blogRepository.updatePostLoggedStatus(id, already_logged);
+      res.status(200).json({ success: true, message: "Post logged status updated" });
+    } catch (error) {
+      console.error("Error in updatePostLoggedStatus:", error);
+      res.status(500).json({
+        success: false,
+        error: { message: "Failed to update post logged status" },
       });
     }
   }

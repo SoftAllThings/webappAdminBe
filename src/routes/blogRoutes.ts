@@ -15,4 +15,7 @@ router.get("/tags", blogController.getTags.bind(blogController));
 // GET /api/blog/posts/:id - Get single post with images and tags
 router.get("/posts/:id", blogController.getPostById.bind(blogController));
 
+// PUT /api/blog/posts/:id/logged - Update post logged status
+router.put("/posts/:id/logged", blogController.updatePostLoggedStatus.bind(blogController));
+
 export default router;
