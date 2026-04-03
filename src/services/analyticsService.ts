@@ -18,6 +18,11 @@
 
   export class AnalyticsService {
 
+    async getTotalUsersCount(): Promise<number> {
+      const snapshot = await db.collection("users").get();
+      return snapshot.size;
+    }
+
     async getData(metric: MetricType, from: string, to: string): Promise<AnalyticsResult> {
 
       

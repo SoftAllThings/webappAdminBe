@@ -30,6 +30,9 @@ router.post("/", poopController.createPoop.bind(poopController));
 // PUT /api/poop/:id - Update an existing poop record
 router.put("/:id", poopController.updatePoop.bind(poopController));
 
+// POST /api/poop/:id/analyze-crop - AI analysis of a cropped image region
+router.post("/:id/analyze-crop", poopController.analyzeCrop.bind(poopController));
+
 // Note: DELETE operation is intentionally omitted as requested
 
 export default router;

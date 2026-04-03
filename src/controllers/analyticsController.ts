@@ -1,9 +1,17 @@
 import { Request, Response } from "express";
 import { analyticsService } from "../services/analyticsService";
 import { MetricType } from "../config/metrics_config";
-
-
 export class AnalyticsController {
+  async getUniqueUsers(_req: Request, res: Response): Promise<void> {
+    try {
+      const count = await analyticsService.getTotalUsersCount();
+      res.status(200).json({ success: true, count });
+    } catch (error) {
+      console.error("Error in getUniqueUsers:", error);
+      res.status(500).json({ success: false, error: { message: "Failed to fetch unique users count" } });
+    }
+  }
+
   async getAnalytics(req: Request, res: Response): Promise<void> {
     try {
       const metric = req.query.metric as MetricType | undefined;

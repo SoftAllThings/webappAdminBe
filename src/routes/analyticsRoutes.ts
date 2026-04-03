@@ -4,7 +4,7 @@ import { analyticsController} from "../controllers/analyticsController";
 
 const router = Router();
 
-// GET /api/firebase/random-user
+router.get("/unique-users", analyticsController.getUniqueUsers.bind(analyticsController));
 router.get("/data", analyticsController.getAnalytics);
 
 export default router;
