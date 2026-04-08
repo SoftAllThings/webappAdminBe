@@ -12,6 +12,19 @@ export class AnalyticsController {
     }
   }
 
+  async getUsersWithEmail(_req: Request, res: Response): Promise<void> {
+    try {
+      const count = await analyticsService.getUsersWithEmailCount();
+      res.status(200).json({ success: true, count });
+    } catch (error) {
+      console.error("Error in getUsersWithEmail:", error);
+      res.status(500).json({
+        success: false,
+        error: { message: "Failed to fetch users with email count" },
+      });
+    }
+  }
+
   async getAnalytics(req: Request, res: Response): Promise<void> {
     try {
       const metric = req.query.metric as MetricType | undefined;
