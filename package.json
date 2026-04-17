@@ -22,6 +22,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/bigquery": "^8.1.1",
     "@types/jsonwebtoken": "^9.0.10",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -30,6 +31,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
+    "node-cache": "^5.1.2",
     "pg": "^8.16.3",
     "recharts": "^3.7.0"
   },

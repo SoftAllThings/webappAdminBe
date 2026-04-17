@@ -83,6 +83,9 @@ jspm_packages/
 # Firebase service account key
 serviceAccountKey.json
 
+# BigQuery service account key
+bqServiceAccountKey.json
+
 # Mac files
 .DS_Store
 

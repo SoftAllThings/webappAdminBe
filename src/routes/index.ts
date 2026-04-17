@@ -5,6 +5,8 @@ import authRoutes from "./authRoutes";
 import poopRoutes from "./poopRoutes";
 import analyticsRoutes from './analyticsRoutes'
 import blogRoutes from './blogRoutes'
+import v2AnalyticsRoutes from './v2AnalyticsRoutes'
+import bqRoutes from './bqRoutes'
 
 const router = Router();
 
@@ -22,7 +24,13 @@ router.use("/poop", authenticateToken, poopRoutes);
 
 router.use("/firebase", analyticsRoutes)
 
+// V2 App analytics: query softai.individuals + softai.stool_logs (protected)
+router.use("/v2-analytics", authenticateToken, v2AnalyticsRoutes);
+
 // Blog routes (protected)
 router.use("/blog", authenticateToken, blogRoutes);
+
+// BigQuery-backed product analytics (protected)
+router.use("/bq", authenticateToken, bqRoutes);
 
 export default router;
