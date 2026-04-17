@@ -3,10 +3,10 @@ import { healthCheck, apiInfo } from "../controllers/healthController";
 import { authenticateToken } from "../controllers/authController";
 import authRoutes from "./authRoutes";
 import poopRoutes from "./poopRoutes";
-import analyticsRoutes from './analyticsRoutes'
-import blogRoutes from './blogRoutes'
-import v2AnalyticsRoutes from './v2AnalyticsRoutes'
-import bqRoutes from './bqRoutes'
+import analyticsRoutes from "./analyticsRoutes";
+import blogRoutes from "./blogRoutes";
+import v2AnalyticsRoutes from "./v2AnalyticsRoutes";
+import bqRoutes from "./bqRoutes";
 
 const router = Router();
 
@@ -22,13 +22,15 @@ router.use("/auth", authRoutes);
 // Protected routes (require authentication)
 router.use("/poop", authenticateToken, poopRoutes);
 
-router.use("/firebase", analyticsRoutes)
+router.use("/firebase", analyticsRoutes);
 
 // V2 App analytics: query softai.individuals + softai.stool_logs (protected)
 router.use("/v2-analytics", authenticateToken, v2AnalyticsRoutes);
 
 // Blog routes (protected)
 router.use("/blog", authenticateToken, blogRoutes);
+// Blog routes (public - blog posts should be readable by everyone)
+// router.use("/blog", blogRoutes);
 
 // BigQuery-backed product analytics (protected)
 router.use("/bq", authenticateToken, bqRoutes);

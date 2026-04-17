@@ -20,6 +20,7 @@ export interface BlogPostRow {
   related_post_ids: string[] | null;
   status: string;
   published_at: string;
+  already_logged: boolean;
   generation_model: string | null;
   generation_duration_ms: number | null;
   pipeline_log: unknown | null;
@@ -207,6 +208,13 @@ export class BlogRepository {
       `SELECT * FROM blog.tags ORDER BY name`
     );
     return result.rows;
+  }
+
+  async updatePostLoggedStatus(postId: string, alreadyLogged: boolean): Promise<void> {
+    await pool.query(
+      `UPDATE blog.posts SET already_logged = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`,
+      [alreadyLogged, postId]
+    );
   }
 }
 

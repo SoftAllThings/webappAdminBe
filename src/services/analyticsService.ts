@@ -18,6 +18,22 @@
 
   export class AnalyticsService {
 
+    async getTotalUsersCount(): Promise<number> {
+      const snapshot = await db.collection("users").get();
+      return snapshot.size;
+    }
+
+    async getUsersWithEmailCount(): Promise<number> {
+      const snapshot = await db.collection("users").get();
+
+      return snapshot.docs.reduce((count, doc) => {
+        const email = doc.get("email");
+        return typeof email === "string" && email.trim() !== ""
+          ? count + 1
+          : count;
+      }, 0);
+    }
+
     async getData(metric: MetricType, from: string, to: string): Promise<AnalyticsResult> {
 
       
