@@ -17,11 +17,16 @@ function init(): { bq: BigQuery; eventsTable: string } {
   }
 
   let credentials: Record<string, unknown>;
+  const rawKey = process.env.BQ_SERVICE_ACCOUNT_KEY?.trim();
+  const rawPath = process.env.BQ_SERVICE_ACCOUNT_PATH?.trim();
+  const looksLikeJson = (v?: string) => !!v && v.startsWith("{");
 
-  if (process.env.BQ_SERVICE_ACCOUNT_KEY) {
-    credentials = JSON.parse(process.env.BQ_SERVICE_ACCOUNT_KEY);
-  } else if (process.env.BQ_SERVICE_ACCOUNT_PATH) {
-    const keyPath = path.resolve(process.env.BQ_SERVICE_ACCOUNT_PATH);
+  if (looksLikeJson(rawKey)) {
+    credentials = JSON.parse(rawKey!);
+  } else if (looksLikeJson(rawPath)) {
+    credentials = JSON.parse(rawPath!);
+  } else if (rawPath) {
+    const keyPath = path.resolve(rawPath);
     if (!fs.existsSync(keyPath)) {
       throw new Error(`BigQuery service account key not found at ${keyPath}`);
     }
