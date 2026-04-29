@@ -31,6 +31,24 @@ export const validateBristolType = (
   return { valid: true };
 };
 
+const rangeValidator =
+  (field: string, min: number, max: number) =>
+  (value: number | undefined): ValidationResult => {
+    if (value === undefined) return { valid: true };
+    if (Number.isNaN(value) || value < min || value > max) {
+      return {
+        valid: false,
+        error: `Invalid ${field} parameter. Must be between ${min} and ${max}.`,
+      };
+    }
+    return { valid: true };
+  };
+
+export const validateColor = rangeValidator("color", 0, 6);
+export const validateConsistency = rangeValidator("consistency", 0, 3);
+export const validateFloating = rangeValidator("floating", 0, 1);
+export const validateHealth = rangeValidator("health", 0, 1);
+
 export const validateId = (id: string | undefined): ValidationResult => {
   if (!id) {
     return {

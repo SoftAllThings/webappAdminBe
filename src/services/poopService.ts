@@ -1,6 +1,7 @@
 import {
   poopRepository,
   BristolStatsResult,
+  PoopListFilters,
 } from "../repositories/poop.repository";
 import { PoopRecord, CreatePoopRecord, UpdatePoopRecord } from "../types/poop";
 
@@ -8,10 +9,10 @@ export class PoopService {
   async getAllPoops(
     page: number = 1,
     limit: number = 10,
-    bristolType?: number
+    filters: PoopListFilters = {}
   ): Promise<{ records: PoopRecord[]; total: number }> {
     const offset = (page - 1) * limit;
-    const result = await poopRepository.findAll(offset, limit, bristolType);
+    const result = await poopRepository.findAll(offset, limit, filters);
 
     return {
       records: result.rows,

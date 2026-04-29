@@ -17,6 +17,16 @@ export interface PaginatedResult<T> {
   total: number;
 }
 
+export interface PoopListFilters {
+  bristolType?: number;
+  color?: number;
+  floating?: number;
+  consistency?: number;
+  health?: number;
+  bloodPresent?: boolean;
+  mucusPresent?: boolean;
+}
+
 const READ_ONLY_FIELDS = [
   "id",
   "created_at",
@@ -31,41 +41,51 @@ export class PoopRepository {
   async findAll(
     offset: number,
     limit: number,
-    bristolType?: number
+    filters: PoopListFilters = {}
   ): Promise<PaginatedResult<PoopRecord>> {
-    let countQuery = "SELECT COUNT(*) as total FROM app.poop";
-    let dataQuery = "SELECT * FROM app.poop";
-    const queryParams: any[] = [];
+    const whereClauses: string[] = [
+      "image_good_for_ml IS NULL",
+      "skipped IS NOT TRUE",
+    ];
+    const filterParams: any[] = [];
 
-    // Always filter for unprocessed records
-    countQuery += " WHERE image_good_for_ml IS NULL AND skipped IS NOT TRUE";
-    dataQuery += " WHERE image_good_for_ml IS NULL AND skipped IS NOT TRUE";
+    const addEquality = (column: string, value: number | undefined) => {
+      if (value === undefined || value === null) return;
+      filterParams.push(value);
+      whereClauses.push(`${column} = $${filterParams.length}`);
+    };
 
-    if (bristolType !== undefined && bristolType !== null) {
-      countQuery += " AND bristol_type = $1";
-      dataQuery += " AND bristol_type = $1";
-      queryParams.push(bristolType);
+    addEquality("bristol_type", filters.bristolType);
+    addEquality("color", filters.color);
+    addEquality("floating", filters.floating);
+    addEquality("consistency", filters.consistency);
+    addEquality("health", filters.health);
+
+    if (filters.bloodPresent) {
+      whereClauses.push("blood > 0");
+    }
+    if (filters.mucusPresent) {
+      whereClauses.push("mucus > 0");
     }
 
-    // Get total count
+    const whereSql = `WHERE ${whereClauses.join(" AND ")}`;
+
     const countResult = await pool.query(
-      countQuery,
-      bristolType !== undefined && bristolType !== null ? [bristolType] : []
+      `SELECT COUNT(*) as total FROM app.poop ${whereSql}`,
+      filterParams
     );
     const total = parseInt(countResult.rows[0]?.total || "0");
 
-    // Apply max limit
     const maxLimit = Math.min(limit, 100);
+    const limitParamIndex = filterParams.length + 1;
+    const offsetParamIndex = filterParams.length + 2;
 
-    // Get paginated records
-    dataQuery +=
-      " ORDER BY created_at DESC LIMIT $" +
-      (queryParams.length + 1) +
-      " OFFSET $" +
-      (queryParams.length + 2);
-    queryParams.push(maxLimit, offset);
-
-    const result = await pool.query(dataQuery, queryParams);
+    const dataQuery = `SELECT * FROM app.poop ${whereSql} ORDER BY created_at DESC LIMIT $${limitParamIndex} OFFSET $${offsetParamIndex}`;
+    const result = await pool.query(dataQuery, [
+      ...filterParams,
+      maxLimit,
+      offset,
+    ]);
 
     return {
       rows: result.rows,

@@ -10,19 +10,41 @@ import {
 import {
   validatePagination,
   validateBristolType,
+  validateColor,
+  validateConsistency,
+  validateFloating,
+  validateHealth,
   validateId,
   validateCreatePoop,
   parseSearchCriteria,
 } from "../validators/poop.validator";
+import { PoopListFilters } from "../repositories/poop.repository";
 
 export class PoopController {
   async getAllPoops(req: Request, res: Response): Promise<void> {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
-      const bristolType = req.query.bristol_type
-        ? parseInt(req.query.bristol_type as string)
-        : undefined;
+
+      const parseIntParam = (raw: unknown): number | undefined => {
+        if (raw === undefined || raw === null || raw === "") return undefined;
+        const n = parseInt(raw as string);
+        return Number.isNaN(n) ? undefined : n;
+      };
+
+      const filters: PoopListFilters = {};
+      const bristolTypeParam = parseIntParam(req.query.bristol_type);
+      if (bristolTypeParam !== undefined) filters.bristolType = bristolTypeParam;
+      const colorParam = parseIntParam(req.query.color);
+      if (colorParam !== undefined) filters.color = colorParam;
+      const floatingParam = parseIntParam(req.query.floating);
+      if (floatingParam !== undefined) filters.floating = floatingParam;
+      const consistencyParam = parseIntParam(req.query.consistency);
+      if (consistencyParam !== undefined) filters.consistency = consistencyParam;
+      const healthParam = parseIntParam(req.query.health);
+      if (healthParam !== undefined) filters.health = healthParam;
+      if (req.query.blood === "present") filters.bloodPresent = true;
+      if (req.query.mucus === "present") filters.mucusPresent = true;
 
       const paginationResult = validatePagination(page, limit);
       if (!paginationResult.valid) {
@@ -33,11 +55,18 @@ export class PoopController {
         return;
       }
 
-      const bristolResult = validateBristolType(bristolType);
-      if (!bristolResult.valid) {
+      const validations = [
+        validateBristolType(filters.bristolType),
+        validateColor(filters.color),
+        validateFloating(filters.floating),
+        validateConsistency(filters.consistency),
+        validateHealth(filters.health),
+      ];
+      const failed = validations.find((v) => !v.valid);
+      if (failed) {
         res.status(400).json({
           success: false,
-          error: { message: bristolResult.error },
+          error: { message: failed.error },
         });
         return;
       }
@@ -45,7 +74,7 @@ export class PoopController {
       const { records, total } = await poopService.getAllPoops(
         page,
         limit,
-        bristolType 
+        filters
       );
 
       const response: PoopListResponse = {
@@ -55,7 +84,9 @@ export class PoopController {
           total,
           page,
           limit,
-          ...(bristolType !== undefined && { bristolType }),
+          ...(filters.bristolType !== undefined && {
+            bristolType: filters.bristolType,
+          }),
         },
       };
 
