@@ -1,0 +1,160 @@
+{
+  "bristol_type": "integer (1–7, based on Bristol Stool Scale)",
+  "consistency": {
+    "hard": 0,
+    "soft": 1,
+    "normal": 2,
+    "liquid": 3
+  },
+  "shape": {
+    "sausage": 0,
+    "lumpy": 1,
+    "flat": 2,
+    "blob": 3,
+    "liquid": 4
+  },
+  "quantity": {
+    "small": 0,
+    "normal": 1,
+    "large": 2
+  },
+  "color": {
+    "black": 0,
+    "white": 1,
+    "green": 2,
+    "yellow": 3,
+    "red": 4,
+    "brown": 5,
+    "orange": 6
+  },
+  "blood": {
+    "none": 0,
+    "trace": 1,
+    "moderate": 2,
+    "high": 3
+  },
+  "mucus": {
+    "none": 0,
+    "trace": 1,
+    "moderate": 2,
+    "high": 3
+  },
+  "floating": {
+    "sink": 0,
+    "float": 1
+  },
+  "health": {
+    "healthy": 0,
+    "unhealthy": 1
+  }
+  // "liver_flukes": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "colon_cancer": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "hemorrhoids": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "anal_fissures": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "crohns_disease": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "ulcerative_colitis": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "celiac_disease": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "gallbladder_disease": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "pancreatitis": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "liver_disease": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "upper_gastrointestinal_bleeding": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "gastrointestinal_infection": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "lactose_intolerance": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "food_poisoning": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "diverticulitis": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "irritable_bowel_syndrome": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "constipation": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "dehydration": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "hypothyroidism": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "bile_duct_obstruction": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "malabsorption_syndrome": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // },
+  // "rapid_gastrointestinal_transit": {
+  //   "Low": 0,
+  //   "Moderate": 1,
+  //   "High": 2
+  // }
+}
