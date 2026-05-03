@@ -7,6 +7,7 @@ import analyticsRoutes from "./analyticsRoutes";
 import blogRoutes from "./blogRoutes";
 import v2AnalyticsRoutes from "./v2AnalyticsRoutes";
 import bqRoutes from "./bqRoutes";
+import insightsRoutes from "./insightsRoutes";
 
 const router = Router();
 
@@ -34,5 +35,8 @@ router.use("/blog", authenticateToken, blogRoutes);
 
 // BigQuery-backed product analytics (protected)
 router.use("/bq", authenticateToken, bqRoutes);
+
+// Insights agent — read briefs, write section feedback (protected)
+router.use("/insights", authenticateToken, insightsRoutes);
 
 export default router;
