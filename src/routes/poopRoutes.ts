@@ -21,6 +21,9 @@ router.get(
   poopController.getBristolStats.bind(poopController)
 );
 
+// GET /api/poop/:id/image - Proxy the record's S3 image (avoids browser CORS on S3)
+router.get("/:id/image", poopController.getImage.bind(poopController));
+
 // GET /api/poop/:id - Get a single poop record by ID
 router.get("/:id", poopController.getPoopById.bind(poopController));
 

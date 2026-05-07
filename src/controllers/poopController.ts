@@ -247,6 +247,48 @@ export class PoopController {
     }
   }
 
+  async getImage(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const idResult = validateId(id);
+      if (!idResult.valid || !id) {
+        res.status(400).json({ success: false, error: { message: idResult.error } });
+        return;
+      }
+
+      const record = await poopService.getPoopById(id);
+      if (!record) {
+        res.status(404).json({ success: false, error: { message: "Poop record not found" } });
+        return;
+      }
+
+      if (!record.s3_url) {
+        res.status(404).json({ success: false, error: { message: "Record has no image" } });
+        return;
+      }
+
+      const upstream = await fetch(record.s3_url);
+      if (!upstream.ok || !upstream.body) {
+        res.status(502).json({
+          success: false,
+          error: { message: `Upstream image fetch failed (${upstream.status})` },
+        });
+        return;
+      }
+
+      const contentType = upstream.headers.get("content-type") ?? "image/jpeg";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Cache-Control", "private, max-age=300");
+
+      const buffer = Buffer.from(await upstream.arrayBuffer());
+      res.status(200).send(buffer);
+    } catch (error) {
+      console.error("Error in getImage:", error);
+      res.status(500).json({ success: false, error: { message: "Failed to fetch image" } });
+    }
+  }
+
   async analyzeCrop(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
