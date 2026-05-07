@@ -39,7 +39,7 @@ export class AuthService {
         iat: Math.floor(Date.now() / 1000),
       },
       JWT_SECRET!,
-      { expiresIn: "24h" }
+      { expiresIn: "30d" }
     );
 
     return {
