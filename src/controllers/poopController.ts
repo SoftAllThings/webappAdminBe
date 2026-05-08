@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import OpenAI from "openai";
 import { poopService } from "../services/poopService";
+import { uploadImage } from "../services/s3Service";
 import {
   CreatePoopRecord,
   UpdatePoopRecord,
@@ -289,7 +289,7 @@ export class PoopController {
     }
   }
 
-  async analyzeCrop(req: Request, res: Response): Promise<void> {
+  async replaceImage(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const { imageBase64 } = req.body;
@@ -305,56 +305,20 @@ export class PoopController {
         return;
       }
 
-      if (!process.env.OPENAI_API_KEY) {
-        res.status(500).json({ success: false, error: { message: "OPENAI_API_KEY is not configured on the server" } });
+      const existing = await poopService.getPoopById(id);
+      if (!existing) {
+        res.status(404).json({ success: false, error: { message: "Poop record not found" } });
         return;
       }
 
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const bytes = Buffer.from(imageBase64, "base64");
+      const { s3Key, s3Url } = await uploadImage(id, bytes, "image/jpeg", "jpg");
+      const updated = await poopService.updateImage(id, s3Key, s3Url);
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        max_tokens: 600,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: `You are analyzing a stool image for medical-grade ML training data labeling.
-
-Provide a concise, structured analysis with:
-1. Bristol Stool Type (1-7) with brief justification
-2. Color (e.g. brown, dark brown, green, yellow, black, red)
-3. Consistency (e.g. hard, formed, soft, loose, watery)
-4. Shape (e.g. separate lumps, sausage-like, fluffy, liquid)
-5. Notable characteristics (e.g. mucus, blood, floating, unusual features)
-6. Image quality for ML training (good / poor — and why)
-
-Be factual and clinical. Do not add disclaimers or wellness advice.`,
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:image/jpeg;base64,${imageBase64}`,
-                  detail: "high",
-                },
-              },
-            ],
-          },
-        ],
-      });
-
-      const analysis = completion.choices[0]?.message?.content;
-      if (!analysis) {
-        res.status(500).json({ success: false, error: { message: "No analysis returned from AI" } });
-        return;
-      }
-
-      res.json({ success: true, data: { analysis } });
+      res.json({ success: true, data: updated });
     } catch (error) {
-      console.error("Error in analyzeCrop:", error);
-      res.status(500).json({ success: false, error: { message: "Failed to analyze image" } });
+      console.error("Error in replaceImage:", error);
+      res.status(500).json({ success: false, error: { message: "Failed to replace image" } });
     }
   }
 

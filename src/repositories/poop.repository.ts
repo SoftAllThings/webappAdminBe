@@ -152,6 +152,22 @@ export class PoopRepository {
     return result.rows[0] || null;
   }
 
+  async updateImage(
+    id: string,
+    s3Key: string,
+    s3Url: string
+  ): Promise<PoopRecord | null> {
+    const result = await executeQueryWithRetry(
+      pool,
+      `UPDATE app.poop
+       SET s3_key = $2, s3_url = $3, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1
+       RETURNING *`,
+      [id, s3Key, s3Url]
+    );
+    return result.rows[0] || null;
+  }
+
   async search(
     criteria: Partial<PoopRecord>,
     offset: number,

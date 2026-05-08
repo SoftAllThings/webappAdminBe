@@ -56,6 +56,14 @@ export class PoopService {
   async getBristolStats(): Promise<BristolStatsResult> {
     return poopRepository.getBristolStats();
   }
+
+  async updateImage(
+    id: string,
+    s3Key: string,
+    s3Url: string
+  ): Promise<PoopRecord | null> {
+    return poopRepository.updateImage(id, s3Key, s3Url);
+  }
 }
 
 export const poopService = new PoopService();
