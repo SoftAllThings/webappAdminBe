@@ -27,7 +27,10 @@ const getClient = (): S3Client => {
   return cachedClient;
 };
 
-const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
+// SigV4 presigned URLs are capped at 7 days by AWS. The proxy endpoint
+// fetches by s3_key directly, so this URL is just a convenience for
+// short-term browser display.
+const PRESIGN_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 export interface UploadedImage {
   s3Key: string;
@@ -59,8 +62,30 @@ export const uploadImage = async (
   const s3Url = await getSignedUrl(
     client,
     new GetObjectCommand({ Bucket: bucket, Key: s3Key }),
-    { expiresIn: ONE_YEAR_SECONDS }
+    { expiresIn: PRESIGN_TTL_SECONDS }
   );
 
   return { s3Key, s3Url };
+};
+
+export const fetchObjectBytes = async (
+  s3Key: string
+): Promise<{ body: Buffer; contentType: string }> => {
+  const client = getClient();
+  const result = await client.send(
+    new GetObjectCommand({ Bucket: bucket, Key: s3Key })
+  );
+  const stream = result.Body as NodeJS.ReadableStream | undefined;
+  if (!stream) {
+    throw new Error(`S3 returned empty body for key ${s3Key}`);
+  }
+
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) {
+    chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : Buffer.from(chunk));
+  }
+  return {
+    body: Buffer.concat(chunks),
+    contentType: result.ContentType ?? "image/jpeg",
+  };
 };

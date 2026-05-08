@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { poopService } from "../services/poopService";
-import { uploadImage } from "../services/s3Service";
+import { uploadImage, fetchObjectBytes } from "../services/s3Service";
 import {
   CreatePoopRecord,
   UpdatePoopRecord,
@@ -260,6 +260,16 @@ export class PoopController {
       const record = await poopService.getPoopById(id);
       if (!record) {
         res.status(404).json({ success: false, error: { message: "Poop record not found" } });
+        return;
+      }
+
+      // Prefer s3_key (works regardless of URL expiry); fall back to s3_url
+      // for legacy rows that only have a URL.
+      if (record.s3_key) {
+        const { body, contentType } = await fetchObjectBytes(record.s3_key);
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("Cache-Control", "private, max-age=300");
+        res.status(200).send(body);
         return;
       }
 
