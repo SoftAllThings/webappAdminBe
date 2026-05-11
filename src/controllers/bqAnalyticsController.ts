@@ -47,6 +47,25 @@ export const bqAnalyticsController = {
         sendError(res, 400, "event param missing or not in whitelist");
         return;
       }
+
+      const breakdown = req.query.breakdown as string | undefined;
+      if (breakdown !== undefined && breakdown !== "") {
+        // Identifier-shape guard. Queries are parameterised so injection is not
+        // possible, but we still reject anything that doesn't look like a GA4
+        // event_params key.
+        if (!/^[a-z][a-z0-9_]{0,40}$/.test(breakdown)) {
+          sendError(res, 400, "breakdown must be a lowercase event_params key");
+          return;
+        }
+        const data = await bqAnalyticsService.getEventBreakdownTimeseries(
+          event,
+          breakdown,
+          range
+        );
+        res.json({ success: true, data });
+        return;
+      }
+
       const data = await bqAnalyticsService.getEventTimeseries(event, range);
       res.json({ success: true, data });
     } catch (err) {

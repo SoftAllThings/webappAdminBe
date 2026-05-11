@@ -19,6 +19,17 @@ export type EventSeriesPoint = {
   uniqueUsers: number;
 };
 
+export type EventBreakdownPoint = {
+  date: string;
+  value: string;
+  count: number;
+  uniqueUsers: number;
+};
+
+// Top-N distinct param values to keep per breakdown query — anything beyond
+// rolls up into an "Other" bucket so the chart stays readable.
+const BREAKDOWN_TOP_N = 10;
+
 export type FunnelType = "signup" | "scan" | "paywall";
 
 export type FunnelStep = {
@@ -259,6 +270,90 @@ export const bqAnalyticsService = {
 
     const result = rows.map((r) => ({
       date: formatDate(r.date),
+      count: Number(r.count),
+      uniqueUsers: Number(r.unique_users),
+    }));
+    cache.set(key, result);
+    return result;
+  },
+
+  async getEventBreakdownTimeseries(
+    event: string,
+    breakdownParam: string,
+    { from, to }: DateRange
+  ): Promise<EventBreakdownPoint[]> {
+    if (!KNOWN_EVENTS.includes(event as typeof KNOWN_EVENTS[number])) {
+      throw new Error(`Unknown event: ${event}`);
+    }
+    const key = cacheKey("timeseries_breakdown", {
+      event,
+      breakdownParam,
+      from,
+      to,
+    });
+    const cached = cache.get<EventBreakdownPoint[]>(key);
+    if (cached) return cached;
+
+    // Single query: extract the param value (string|int|float|double), keep the
+    // top N values by total count, fold the rest into "Other", then aggregate
+    // by (date, value).
+    const query = `
+      WITH per_value AS (
+        SELECT
+          event_date AS date,
+          COALESCE(
+            ep.value.string_value,
+            CAST(ep.value.int_value AS STRING),
+            CAST(ep.value.float_value AS STRING),
+            CAST(ep.value.double_value AS STRING),
+            '(null)'
+          ) AS value,
+          user_pseudo_id
+        FROM ${getEventsTable()}, UNNEST(event_params) AS ep
+        WHERE _TABLE_SUFFIX BETWEEN @from AND @to
+          AND event_name = @event
+          AND ep.key = @breakdownParam
+      ),
+      ranked AS (
+        SELECT value, COUNT(*) AS total
+        FROM per_value
+        GROUP BY value
+        ORDER BY total DESC
+        LIMIT @topN
+      ),
+      normalized AS (
+        SELECT
+          date,
+          IF(value IN (SELECT value FROM ranked), value, 'Other') AS value,
+          user_pseudo_id
+        FROM per_value
+      )
+      SELECT
+        date,
+        value,
+        COUNT(*) AS count,
+        COUNT(DISTINCT user_pseudo_id) AS unique_users
+      FROM normalized
+      GROUP BY date, value
+      ORDER BY date, value
+    `;
+
+    const rows = await runQuery<{
+      date: string;
+      value: string | null;
+      count: number;
+      unique_users: number;
+    }>(query, {
+      from,
+      to,
+      event,
+      breakdownParam,
+      topN: BREAKDOWN_TOP_N,
+    });
+
+    const result: EventBreakdownPoint[] = rows.map((r) => ({
+      date: formatDate(r.date),
+      value: r.value ?? "(null)",
       count: Number(r.count),
       uniqueUsers: Number(r.unique_users),
     }));
