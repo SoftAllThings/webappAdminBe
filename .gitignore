@@ -94,3 +94,6 @@ bqServiceAccountKey.json
 .idea/
 *.swp
 *.swo
+
+out-3k/
+softallthings-3k.zip

@@ -33,33 +33,116 @@ export type ErrorRow = {
   uniqueUsers: number;
 };
 
+// Mirrors ANALYTICS_EVENTS in PoopCheck/src/types/analytics.types.ts.
+// Keep in sync when new pc_* events are added on the client.
 export const KNOWN_EVENTS = [
+  // Onboarding
+  "pc_ob_step_viewed",
+  "pc_ob_completed",
+  "pc_ob_skipped",
+
+  // Auth
   "pc_auth_signup_started",
   "pc_auth_signup_completed",
   "pc_auth_signup_failed",
+  "pc_auth_login_started",
   "pc_auth_login_completed",
+  "pc_auth_login_failed",
+  "pc_auth_logout",
+
+  // Scan / Analysis
   "pc_scan_camera_opened",
   "pc_scan_photo_captured",
+  "pc_scan_gallery_opened",
+  "pc_scan_gallery_picked",
+  "pc_scan_gallery_cancelled",
+  "pc_scan_preview_resize_started",
+  "pc_scan_preview_resize_failed",
+  "pc_scan_preview_load_failed",
+  "pc_scan_crop_opened",
+  "pc_scan_crop_failed",
+  "pc_scan_image_prep_started",
+  "pc_scan_image_prep_crop_failed",
+  "pc_scan_image_prep_compress_failed",
+  "pc_scan_image_prep_fallback_raw",
+  "pc_scan_image_prep_succeeded",
+  "pc_scan_analyze_request_started",
+  "pc_scan_analyze_first_sse",
+  "pc_scan_edit_action",
   "pc_scan_questions_started",
   "pc_scan_questions_completed",
+  "pc_scan_questions_abandoned",
   "pc_scan_analysis_started",
   "pc_scan_analysis_completed",
   "pc_scan_first_completed",
   "pc_scan_result_viewed",
+
+  // Paywall / Premium
   "pc_pw_viewed",
   "pc_pw_plan_selected",
   "pc_pw_purchase_initiated",
   "pc_pw_purchase_completed",
   "pc_pw_purchase_failed",
+  "pc_pw_dismissed",
+
+  // Chat
   "pc_chat_opened",
   "pc_chat_message_sent",
+  "pc_chat_history_viewed",
+  "pc_chat_closed",
+
+  // Community
+  "pc_comm_feed_viewed",
   "pc_comm_post_published",
   "pc_comm_post_viewed",
   "pc_comm_post_liked",
+  "pc_comm_post_unliked",
+  "pc_comm_comment_added",
+  "pc_comm_reply_added",
+  "pc_comm_profile_viewed",
+  "pc_comm_leaderboard_viewed",
+
+  // Navigation
+  "pc_nav_screen_view",
+
+  // Notifications
   "pc_notif_permission_granted",
+  "pc_notif_permission_denied",
   "pc_notif_opened",
+
+  // Errors / Friction
   "pc_err_camera_denied",
   "pc_err_analysis_failed",
+
+  // System / Stability
+  "pc_sys_app_launch",
+  "pc_sys_memory_warning",
+  "pc_sys_oom_near",
+
+  // Account / Settings
+  "pc_acct_settings_opened",
+  "pc_acct_lifestyle_updated",
+  "pc_acct_account_updated",
+  "pc_acct_widget_added",
+  "pc_acct_delete_initiated",
+  "pc_acct_delete_confirmed",
+
+  // Revenue / Subscription
+  "pc_rev_subscription_renewed",
+  "pc_rev_subscription_cancelled",
+  "pc_rev_trial_started",
+  "pc_rev_trial_converted",
+  "pc_sub_cancel_reminder_shown",
+  "pc_sub_cancel_reminder_cta_tapped",
+  "pc_sub_cancel_reminder_dismissed",
+
+  // Sharing
+  "pc_share_result_shared",
+  "pc_share_referral_sent",
+
+  // Dashboard (Profile carousel cards)
+  "pc_dash_card_viewed",
+  "pc_dash_card_tapped",
 ] as const;
 
 const FUNNEL_STEPS: Record<FunnelType, { step: string; event: string }[]> = {
