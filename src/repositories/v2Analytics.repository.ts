@@ -532,10 +532,13 @@ export class V2AnalyticsRepository {
       throw new Error(`Invalid groupBy for stool_logs: ${groupBy}`);
     }
 
-    const orderBy =
-      groupBy === "day" || groupBy === "week" || groupBy === "month"
-        ? "bucket ASC"
-        : "count DESC";
+    const isTimeBucket =
+      groupBy === "day" || groupBy === "week" || groupBy === "month";
+    const orderBy = isTimeBucket ? "bucket ASC" : "count DESC";
+    // Time series can need up to a year of buckets; dimensional groupings
+    // (sex, diet, bristol_type, etc.) should never legitimately need more
+    // than ~100 buckets and the dashboard truncates anyway.
+    const limit = isTimeBucket ? 365 : 100;
 
     const q = `
       SELECT ${groupExpr} AS bucket, COUNT(*)::bigint AS count
@@ -543,7 +546,7 @@ export class V2AnalyticsRepository {
       ${sql}
       GROUP BY bucket
       ORDER BY ${orderBy}
-      LIMIT 365
+      LIMIT ${limit}
     `;
 
     const res = await pool.query(q, params);
@@ -597,9 +600,17 @@ export class V2AnalyticsRepository {
     };
   }
 
-  async listProfileKeys(): Promise<
+  async listProfileKeys(
+    organizationId?: number
+  ): Promise<
     Array<{ key: string; occurrences: number; sampleValues: string[] }>
   > {
+    const params: unknown[] = [];
+    let orgFilter = "";
+    if (organizationId !== undefined) {
+      params.push(organizationId);
+      orgFilter = `WHERE i.organization_id = $${params.length}`;
+    }
     const q = `
       SELECT key,
              COUNT(*)::bigint AS occurrences,
@@ -608,12 +619,13 @@ export class V2AnalyticsRepository {
         SELECT k AS key, v::text AS value
         FROM softai.individuals i,
              LATERAL jsonb_each_text(COALESCE(i.profile_data, '{}'::jsonb)) AS t(k, v)
+        ${orgFilter}
       ) s
       GROUP BY key
       ORDER BY occurrences DESC
       LIMIT 40
     `;
-    const res = await pool.query(q);
+    const res = await pool.query(q, params);
     return res.rows.map((r) => ({
       key: r.key,
       occurrences: parseInt(r.occurrences),

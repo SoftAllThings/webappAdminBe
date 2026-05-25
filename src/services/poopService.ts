@@ -1,9 +1,15 @@
+import NodeCache from "node-cache";
 import {
   poopRepository,
   BristolStatsResult,
   PoopListFilters,
 } from "../repositories/poop.repository";
 import { PoopRecord, CreatePoopRecord, UpdatePoopRecord } from "../types/poop";
+
+// 90s TTL on the dashboard's bristol stats — four parallel COUNT(*)s over
+// app.poop / readyToTrainView per uncached call.
+const cache = new NodeCache({ stdTTL: 90, checkperiod: 120 });
+const BRISTOL_STATS_KEY = "bristolStats";
 
 export class PoopService {
   async getAllPoops(
@@ -54,7 +60,11 @@ export class PoopService {
   }
 
   async getBristolStats(): Promise<BristolStatsResult> {
-    return poopRepository.getBristolStats();
+    const cached = cache.get<BristolStatsResult>(BRISTOL_STATS_KEY);
+    if (cached) return cached;
+    const fresh = await poopRepository.getBristolStats();
+    cache.set(BRISTOL_STATS_KEY, fresh);
+    return fresh;
   }
 
   async updateImage(

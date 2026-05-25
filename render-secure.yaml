@@ -22,7 +22,7 @@ services:
       - key: DB_PASSWORD
         fromSecret: DATABASE_PASSWORD
       - key: DB_MAX_CONNECTIONS
-        value: 20
+        value: 5
       - key: DB_IDLE_TIMEOUT
         value: 30000
       - key: DB_CONNECTION_TIMEOUT

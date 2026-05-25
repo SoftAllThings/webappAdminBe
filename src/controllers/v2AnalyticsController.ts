@@ -1,9 +1,14 @@
 import { Request, Response } from "express";
+import NodeCache from "node-cache";
 import {
   v2AnalyticsRepository,
   IndividualsFilters,
   StoolLogsFilters,
 } from "../repositories/v2Analytics.repository";
+
+// 90s TTL on the V2 dashboard overview — five parallel aggregates per uncached call.
+const overviewCache = new NodeCache({ stdTTL: 90, checkperiod: 120 });
+const OVERVIEW_KEY = "v2_overview";
 
 function parseInteger(v: unknown): number | undefined {
   if (v === undefined || v === null || v === "") return undefined;
@@ -132,7 +137,13 @@ function handleError(res: Response, err: unknown, action: string): void {
 export class V2AnalyticsController {
   async getOverview(_req: Request, res: Response): Promise<void> {
     try {
-      const overview = await v2AnalyticsRepository.getOverview();
+      let overview = overviewCache.get<
+        Awaited<ReturnType<typeof v2AnalyticsRepository.getOverview>>
+      >(OVERVIEW_KEY);
+      if (!overview) {
+        overview = await v2AnalyticsRepository.getOverview();
+        overviewCache.set(OVERVIEW_KEY, overview);
+      }
       res.status(200).json({ success: true, data: overview });
     } catch (err) {
       handleError(res, err, "fetch overview");
@@ -213,9 +224,10 @@ export class V2AnalyticsController {
     }
   }
 
-  async listProfileKeys(_req: Request, res: Response): Promise<void> {
+  async listProfileKeys(req: Request, res: Response): Promise<void> {
     try {
-      const keys = await v2AnalyticsRepository.listProfileKeys();
+      const organizationId = parseInteger(req.query.organization_id);
+      const keys = await v2AnalyticsRepository.listProfileKeys(organizationId);
       res.status(200).json({ success: true, data: keys });
     } catch (err) {
       handleError(res, err, "list profile keys");
