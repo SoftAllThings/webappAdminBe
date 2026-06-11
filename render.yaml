@@ -25,7 +25,8 @@ services:
 # DB_SSL=true
 # DB_MAX_CONNECTIONS=5
 # DB_IDLE_TIMEOUT=300000
-# DB_CONNECTION_TIMEOUT=60000
+# DB_CONNECTION_TIMEOUT=10000
+# DB_QUERY_TIMEOUT=30000
 # ANTHROPIC_API_KEY=sk-ant-...
 # POOPCHECK_MCP_URL=https://us-central1-poopmania-prod.cloudfunctions.net/mcpInsightsServer
 # POOPCHECK_MCP_TOKEN=<bearer token from poopcheck functions config>

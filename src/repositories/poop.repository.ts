@@ -70,22 +70,24 @@ export class PoopRepository {
 
     const whereSql = `WHERE ${whereClauses.join(" AND ")}`;
 
-    const countResult = await pool.query(
-      `SELECT COUNT(*) as total FROM app.poop ${whereSql}`,
-      filterParams
-    );
-    const total = parseInt(countResult.rows[0]?.total || "0");
-
     const maxLimit = Math.min(limit, 100);
     const limitParamIndex = filterParams.length + 1;
     const offsetParamIndex = filterParams.length + 2;
 
     const dataQuery = `SELECT * FROM app.poop ${whereSql} ORDER BY created_at DESC LIMIT $${limitParamIndex} OFFSET $${offsetParamIndex}`;
-    const result = await pool.query(dataQuery, [
-      ...filterParams,
-      maxLimit,
-      offset,
+    const [countResult, result] = await Promise.all([
+      executeQueryWithRetry(
+        pool,
+        `SELECT COUNT(*) as total FROM app.poop ${whereSql}`,
+        filterParams
+      ),
+      executeQueryWithRetry(pool, dataQuery, [
+        ...filterParams,
+        maxLimit,
+        offset,
+      ]),
     ]);
+    const total = parseInt(countResult.rows[0]?.total || "0");
 
     return {
       rows: result.rows,
@@ -95,7 +97,7 @@ export class PoopRepository {
 
   async findById(id: string): Promise<PoopRecord | null> {
     const query = "SELECT * FROM app.poop WHERE id = $1";
-    const result = await pool.query(query, [id]);
+    const result = await executeQueryWithRetry(pool, query, [id]);
     return result.rows[0] || null;
   }
 
@@ -197,7 +199,7 @@ export class PoopRepository {
 
     // Get total count
     const countQuery = `SELECT COUNT(*) as total FROM app.poop ${whereClause}`;
-    const countResult = await pool.query(countQuery, values);
+    const countResult = await executeQueryWithRetry(pool, countQuery, values);
     const total = parseInt(countResult.rows[0]?.total || "0");
 
     // Get paginated records
@@ -208,7 +210,11 @@ export class PoopRepository {
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
-    const result = await pool.query(query, [...values, limit, offset]);
+    const result = await executeQueryWithRetry(pool, query, [
+      ...values,
+      limit,
+      offset,
+    ]);
 
     return {
       rows: result.rows,
@@ -223,25 +229,34 @@ export class PoopRepository {
       ORDER BY first_check_date DESC
       LIMIT 1
     `;
-    const result = await pool.query(query);
+    const result = await executeQueryWithRetry(pool, query);
     return result.rows[0] || null;
   }
 
   async getBristolStats(): Promise<BristolStatsResult> {
     const [bristolResult, totalResult, handledResult, readyResult] =
       await Promise.all([
-        pool.query(`
+        executeQueryWithRetry(
+          pool,
+          `
           SELECT bristol_type, count(bristol_type) as num
           FROM app.readyToTrainView
           GROUP BY bristol_type
           ORDER BY bristol_type
-        `),
-        pool.query(`SELECT COUNT(*) as count FROM app.poop`),
-        pool.query(`
+        `
+        ),
+        executeQueryWithRetry(pool, `SELECT COUNT(*) as count FROM app.poop`),
+        executeQueryWithRetry(
+          pool,
+          `
           SELECT COUNT(*) as count FROM app.poop
           WHERE image_good_for_ml IS NOT NULL OR skipped IS NOT NULL
-        `),
-        pool.query(`SELECT COUNT(*) as count FROM app.readyToTrainView`),
+        `
+        ),
+        executeQueryWithRetry(
+          pool,
+          `SELECT COUNT(*) as count FROM app.readyToTrainView`
+        ),
       ]);
 
     const totalPoops = parseInt(totalResult.rows[0]?.count || "0");

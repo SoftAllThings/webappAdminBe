@@ -94,25 +94,26 @@ class Server {
   }
 
   public async start(): Promise<void> {
-    try {
-      // Test database connection
-      if (process.env.NODE_ENV !== "development") {
-  await testConnection();
-}
+    // Start the server first — a cold DB/pooler must not crash-loop the
+    // service; per-request retries recover once the DB is reachable.
+    this.app.listen(this.port, () => {
+      console.log(`🚀 Server running on port ${this.port}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(`🔗 API Base URL: http://localhost:${this.port}/api`);
+    });
 
-      // Start the server
-      this.app.listen(this.port, () => {
-        console.log(`🚀 Server running on port ${this.port}`);
-        console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
-        console.log(`🔗 API Base URL: http://localhost:${this.port}/api`);
+    // Graceful shutdown
+    process.on("SIGTERM", this.gracefulShutdown);
+    process.on("SIGINT", this.gracefulShutdown);
+
+    // Warm up the DB connection in the background
+    if (process.env.NODE_ENV !== "development") {
+      testConnection().catch((error: unknown) => {
+        console.error(
+          "⚠️ Initial DB warm-up failed; continuing (per-request retry will recover):",
+          (error as Error)?.message
+        );
       });
-
-      // Graceful shutdown
-      process.on("SIGTERM", this.gracefulShutdown);
-      process.on("SIGINT", this.gracefulShutdown);
-    } catch (error) {
-      console.error("❌ Failed to start server:", error);
-      process.exit(1);
     }
   }
 

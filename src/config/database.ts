@@ -11,14 +11,15 @@ const poolConfig: PoolConfig = {
   password: process.env.DB_PASSWORD || "",
   max: parseInt(process.env.DB_MAX_CONNECTIONS || "5", 10), // Reduced for Supabase
   idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || "10000", 10), // Reduced timeout
+  // Cold connects through the Supavisor pooler measure ~4s; keep headroom
   connectionTimeoutMillis: parseInt(
-    process.env.DB_CONNECTION_TIMEOUT || "5000",
+    process.env.DB_CONNECTION_TIMEOUT || "10000",
     10
-  ), // Increased timeout
+  ),
   // Supabase specific settings
   ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
-  // Add query timeout
-  query_timeout: 10000,
+  // Client-side query timeout; pg destroys the connection when it fires
+  query_timeout: parseInt(process.env.DB_QUERY_TIMEOUT || "30000", 10),
   // Add keepalive settings
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000,

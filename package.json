@@ -12,6 +12,7 @@
     "clean": "rm -rf dist",
     "rebuild": "npm run clean && npm run build",
     "export-3k": "ts-node scripts/export-3k.ts",
+    "migrate-007": "ts-node scripts/run-migration-007.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

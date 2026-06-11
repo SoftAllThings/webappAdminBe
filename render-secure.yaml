@@ -24,9 +24,11 @@ services:
       - key: DB_MAX_CONNECTIONS
         value: 5
       - key: DB_IDLE_TIMEOUT
-        value: 30000
+        value: 300000
       - key: DB_CONNECTION_TIMEOUT
-        value: 2000
+        value: 10000
+      - key: DB_QUERY_TIMEOUT
+        value: 30000
       - key: DB_SSL
         value: true
     scaling:

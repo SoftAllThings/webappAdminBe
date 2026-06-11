@@ -17,9 +17,10 @@ For production deployment, it's recommended to set these environment variables t
 
 ### Database Pool Configuration
 
-- `DB_MAX_CONNECTIONS`: 20
-- `DB_IDLE_TIMEOUT`: 30000
-- `DB_CONNECTION_TIMEOUT`: 2000
+- `DB_MAX_CONNECTIONS`: 5
+- `DB_IDLE_TIMEOUT`: 300000 (5 min — don't evict warm pooler connections)
+- `DB_CONNECTION_TIMEOUT`: 10000 (cold connects through Supavisor take ~4s)
+- `DB_QUERY_TIMEOUT`: 30000
 
 ### Application Configuration
 
