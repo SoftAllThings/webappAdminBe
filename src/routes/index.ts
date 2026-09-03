@@ -9,6 +9,7 @@ import v2AnalyticsRoutes from "./v2AnalyticsRoutes";
 import bqRoutes from "./bqRoutes";
 import insightsRoutes from "./insightsRoutes";
 import chatRoutes from "./chatRoutes";
+import exportRoutes from "./exportRoutes";
 import modelComparisonRoutes from "./modelComparisonRoutes";
 
 const router = Router();
@@ -43,6 +44,9 @@ router.use("/insights", authenticateToken, insightsRoutes);
 
 // Analyst chat (Claude + MCP, streaming SSE) — protected
 router.use("/chat", authenticateToken, chatRoutes);
+
+// Bulk CSV export for offline analysis.
+router.use("/export", authenticateToken, exportRoutes);
 
 // ML model A/B comparison — runs old + new ONNX models side-by-side (protected)
 router.use("/model-comparison", authenticateToken, modelComparisonRoutes);
