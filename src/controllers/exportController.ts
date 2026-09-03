@@ -75,8 +75,17 @@ export const exportController = {
       console.error("[export] archiver failed:", err);
       res.destroy(err);
     });
-    req.on("close", () => {
-      if (!res.writableEnded) archive.abort();
+    // Detect a real client disconnect on the RESPONSE, not the request.
+    // req 'close' fires as soon as body-parser has consumed the POST body —
+    // long before the zip has finished streaming — so aborting on it kills
+    // every export that takes more than a moment.
+    // writableFinished is true only after res.end() has fully flushed, so a
+    // close without it means the client actually went away.
+    res.on("close", () => {
+      if (!res.writableFinished) {
+        console.warn("[export] client disconnected before completion, aborting");
+        archive.abort();
+      }
     });
 
     archive.pipe(res);
