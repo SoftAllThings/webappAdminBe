@@ -11,6 +11,7 @@ import insightsRoutes from "./insightsRoutes";
 import chatRoutes from "./chatRoutes";
 import exportRoutes from "./exportRoutes";
 import modelComparisonRoutes from "./modelComparisonRoutes";
+import mlRunsRoutes from "./mlRunsRoutes";
 
 const router = Router();
 
@@ -50,5 +51,8 @@ router.use("/export", authenticateToken, exportRoutes);
 
 // ML model A/B comparison — runs old + new ONNX models side-by-side (protected)
 router.use("/model-comparison", authenticateToken, modelComparisonRoutes);
+
+// Training-run manifests + benchmark leaderboards, read from S3.
+router.use("/ml-runs", authenticateToken, mlRunsRoutes);
 
 export default router;
