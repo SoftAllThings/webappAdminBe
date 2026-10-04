@@ -12,6 +12,7 @@ import chatRoutes from "./chatRoutes";
 import exportRoutes from "./exportRoutes";
 import modelComparisonRoutes from "./modelComparisonRoutes";
 import mlRunsRoutes from "./mlRunsRoutes";
+import dataSamplesRoutes from "./dataSamplesRoutes";
 
 const router = Router();
 
@@ -54,5 +55,9 @@ router.use("/model-comparison", authenticateToken, modelComparisonRoutes);
 
 // Training-run manifests + benchmark leaderboards, read from S3.
 router.use("/ml-runs", authenticateToken, mlRunsRoutes);
+
+// Buyer data samples: images + JSON zips, logged per buyer. Auth is applied
+// per route — the zip download authenticates with its own short-lived token.
+router.use("/data-samples", dataSamplesRoutes);
 
 export default router;

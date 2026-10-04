@@ -68,12 +68,17 @@ export const uploadImage = async (
   return { s3Key, s3Url };
 };
 
+/** SoftAI (softai.stool_logs) images live in their own bucket. */
+export const SOFTAI_BUCKET = process.env.SOFTAI_S3_BUCKET || "poops-softai";
+
 export const fetchObjectBytes = async (
-  s3Key: string
+  s3Key: string,
+  opts: { bucket?: string; abortSignal?: AbortSignal } = {}
 ): Promise<{ body: Buffer; contentType: string }> => {
   const client = getClient();
   const result = await client.send(
-    new GetObjectCommand({ Bucket: bucket, Key: s3Key })
+    new GetObjectCommand({ Bucket: opts.bucket ?? bucket, Key: s3Key }),
+    opts.abortSignal ? { abortSignal: opts.abortSignal } : {}
   );
   const stream = result.Body as NodeJS.ReadableStream | undefined;
   if (!stream) {
