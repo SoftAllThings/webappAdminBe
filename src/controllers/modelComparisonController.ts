@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { compareModels } from "../services/modelComparisonService";
+import { ImageDecodeError, compareModels } from "../services/modelComparisonService";
 
 /**
  * Strip an optional "data:image/...;base64," prefix and return the buffer.
@@ -21,7 +21,9 @@ export const modelComparisonController = {
   /**
    * POST /api/model-comparison/compare
    * Body: { imageBase64: string }   // raw base64 OR a data:URL
-   * Returns: ComparisonResult — both models' per-task predictions.
+   * Returns: ComparisonResult — Production ONNX, Candidate ONNX, GPT and
+   * Gemini predictions. A model that fails comes back with `ok: false` and
+   * its error; the request itself still succeeds.
    */
   async compare(req: Request, res: Response): Promise<void> {
     const body = req.body as { imageBase64?: unknown };
@@ -49,17 +51,9 @@ export const modelComparisonController = {
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       console.error("[modelComparison/compare] error:", err);
-      // Distinguish "model file missing" (config) from inference errors so
-      // the FE can surface a helpful hint instead of a generic 500.
-      const isConfigError = /model not found/i.test(message);
-      res.status(isConfigError ? 500 : 500).json({
+      res.status(err instanceof ImageDecodeError ? 400 : 500).json({
         success: false,
-        error: {
-          message,
-          hint: isConfigError
-            ? "Set OLD_MODEL_PATH / NEW_MODEL_PATH env vars in webappAdminBe/.env, or copy the .onnx files to the default locations."
-            : undefined,
-        },
+        error: { message },
       });
     }
   },

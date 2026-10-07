@@ -2,6 +2,20 @@ import * as ort from "onnxruntime-node";
 import * as fs from "fs";
 import * as path from "path";
 import sharp from "sharp";
+import {
+  FIELD_LABELS,
+  FIELD_NAMES,
+  FieldName,
+  ModelPrediction,
+  ModelRun,
+  TaskPrediction,
+} from "./modelComparisonFields";
+import {
+  VisionImage,
+  prepareVisionImage,
+  runGemini,
+  runGpt,
+} from "./modelComparisonLlm";
 
 // ============================================================================
 // Configuration
@@ -30,64 +44,17 @@ const BRISTOL_SOFTMAX_TEMPERATURE = Number(
   process.env.BRISTOL_SOFTMAX_TEMPERATURE ?? 4.0,
 );
 
-// Label schemas — index order is locked by mlMapping.json and analyzer-onnx.ts.
-const BRISTOL_LABELS = [
-  "Type 1",
-  "Type 2",
-  "Type 3",
-  "Type 4",
-  "Type 5",
-  "Type 6",
-  "Type 7",
-];
+// ONNX output tensor per field — the head names differ from the field names
+// only for Bristol.
+const onnxOutputName = (field: FieldName): string =>
+  field === "bristolType" ? "bristol_type" : field;
 
-const SECONDARY_LABELS = {
-  consistency: ["hard", "soft", "normal", "liquid"],
-  shape: ["sausage", "lumpy", "flat", "blob", "liquid"],
-  quantity: ["small", "normal", "large"],
-  color: ["black", "white", "green", "yellow", "red", "brown", "orange"],
-  health: ["healthy", "unhealthy"],
-  blood: ["none", "trace", "moderate", "high"],
-  mucus: ["none", "trace", "moderate", "high"],
-  floating: ["sink", "float"],
-} as const;
+export type ComparedModel = "production" | "candidate" | "gpt" | "gemini";
 
-type SecondaryTaskName = keyof typeof SECONDARY_LABELS;
-const SECONDARY_TASK_NAMES = Object.keys(SECONDARY_LABELS) as SecondaryTaskName[];
+export type ComparisonResult = Record<ComparedModel, ModelRun>;
 
 // ============================================================================
-// Types (shared with the FE)
-// ============================================================================
-
-export interface TaskPrediction {
-  /** Probability per class, in label-index order. */
-  probs: number[];
-  /** Label names, parallel to `probs`. */
-  labels: string[];
-  /** argmax index. */
-  argmax: number;
-  /** Label at argmax (convenience). */
-  argmaxLabel: string;
-  /** Confidence at argmax (0..1). */
-  confidence: number;
-}
-
-export interface ModelPrediction {
-  bristolType: TaskPrediction;
-  secondary: Record<SecondaryTaskName, TaskPrediction>;
-  /** Wall-clock inference time (ms) for this model on this image. */
-  inferenceMs: number;
-}
-
-export interface ComparisonResult {
-  production: ModelPrediction;
-  candidate: ModelPrediction;
-  productionModelPath: string;
-  candidateModelPath: string;
-}
-
-// ============================================================================
-// Model loading — load both sessions once at startup
+// Model loading — load both ONNX sessions once
 // ============================================================================
 
 let productionSessionPromise: Promise<ort.InferenceSession> | null = null;
@@ -198,46 +165,68 @@ function buildTaskPrediction(
 }
 
 // ============================================================================
-// Single-model inference
+// Single ONNX model inference
 // ============================================================================
 
-async function runModel(
-  session: ort.InferenceSession,
+/** Never rejects — a missing model file or bad output becomes that model's error. */
+async function runOnnx(
+  source: string,
+  getSession: () => Promise<ort.InferenceSession>,
   inputTensor: ort.Tensor,
-): Promise<ModelPrediction> {
-  const t0 = Date.now();
-  const results = await session.run({ input: inputTensor });
-  const inferenceMs = Date.now() - t0;
+): Promise<ModelRun> {
+  let inferenceMs = 0;
+  try {
+    const session = await getSession();
+    const t0 = Date.now();
+    const results = await session.run({ input: inputTensor });
+    inferenceMs = Date.now() - t0;
 
-  const get = (name: string): Float32Array => {
-    const out = results[name]?.data;
-    if (!out) throw new Error(`Model output '${name}' missing`);
-    return out as Float32Array;
-  };
-
-  const bristolType = buildTaskPrediction(
-    get("bristol_type"),
-    BRISTOL_LABELS,
-    BRISTOL_SOFTMAX_TEMPERATURE,
-  );
-
-  const secondary = {} as Record<SecondaryTaskName, TaskPrediction>;
-  for (const name of SECONDARY_TASK_NAMES) {
-    secondary[name] = buildTaskPrediction(get(name), SECONDARY_LABELS[name]);
+    const fields = {} as Record<FieldName, TaskPrediction | null>;
+    for (const name of FIELD_NAMES) {
+      const out = results[onnxOutputName(name)]?.data;
+      if (!out) throw new Error(`Model output '${onnxOutputName(name)}' missing`);
+      fields[name] = buildTaskPrediction(
+        out as Float32Array,
+        FIELD_LABELS[name],
+        name === "bristolType" ? BRISTOL_SOFTMAX_TEMPERATURE : 1.0,
+      );
+    }
+    const prediction: ModelPrediction = { fields, gate: null };
+    return { ok: true, source, inferenceMs, prediction };
+  } catch (err) {
+    return {
+      ok: false,
+      source,
+      inferenceMs,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
-
-  return { bristolType, secondary, inferenceMs };
 }
 
 // ============================================================================
-// Public API: compare both models on one image
+// Public API: score one image with all four models
 // ============================================================================
+
+/** The upload couldn't be decoded as an image — a client error, not a model one. */
+export class ImageDecodeError extends Error {}
 
 export async function compareModels(
   imageBuffer: Buffer,
 ): Promise<ComparisonResult> {
-  // Preprocess once — both models take identical input.
-  const inputData = await preprocessImage(imageBuffer);
+  // Preprocess once per input format: both ONNX models take the same 299x299
+  // tensor, both LLMs take the same downscaled JPEG (as in production).
+  let inputData: Float32Array;
+  let visionImage: VisionImage;
+  try {
+    [inputData, visionImage] = await Promise.all([
+      preprocessImage(imageBuffer),
+      prepareVisionImage(imageBuffer),
+    ]);
+  } catch (err) {
+    throw new ImageDecodeError(
+      `Could not decode the image: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
   const inputTensor = new ort.Tensor("float32", inputData, [
     1,
     3,
@@ -245,20 +234,13 @@ export async function compareModels(
     MODEL_INPUT_WIDTH,
   ]);
 
-  // Run both models in parallel.
-  const [productionSession, candidateSession] = await Promise.all([
-    getProductionSession(),
-    getCandidateSession(),
-  ]);
-  const [production, candidate] = await Promise.all([
-    runModel(productionSession, inputTensor),
-    runModel(candidateSession, inputTensor),
+  // All four in parallel; each one fails on its own without failing the rest.
+  const [production, candidate, gpt, gemini] = await Promise.all([
+    runOnnx(PRODUCTION_MODEL_PATH, getProductionSession, inputTensor),
+    runOnnx(CANDIDATE_MODEL_PATH, getCandidateSession, inputTensor),
+    runGpt(visionImage),
+    runGemini(visionImage),
   ]);
 
-  return {
-    production,
-    candidate,
-    productionModelPath: PRODUCTION_MODEL_PATH,
-    candidateModelPath: CANDIDATE_MODEL_PATH,
-  };
+  return { production, candidate, gpt, gemini };
 }
